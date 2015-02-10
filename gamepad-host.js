@@ -24,34 +24,38 @@
     };
 
     window.addEventListener('beforeunload', function () {
-      console.log('Closed connection to WS server');
-      sock.close();
+        console.log('Closed connection to WS server');
+        sock.close();
     });
 
     var sendGamepadMsg = function (data) {
-        sock.send(JSON.stringify({
-            n: 'gamepad', d: data
-        }));
+        sock.send(JSON.stringify({n: 'gamepad', d: data}));
     };
 
-    dirUp.addEventListener('click', function (e) {
-        e.preventDefault();
-        sendGamepadMsg({player: player, direction: 'up'});
-    });
+    function _pd(func) {
+        return function (e) {
+            e.preventDefault();
+            func.apply(this, arguments);
+        };
+    }
 
-    dirDown.addEventListener('click', function (e) {
-        e.preventDefault();
-        sendGamepadMsg({player: player, direction: 'down'});
-    });
+    var axisChoices = ['left', 'right'];
+    var dirChoices = ['up', 'down', 'left', 'right'];
+    var dirElements = {};
 
-    dirLeft.addEventListener('click', function (e) {
-        e.preventDefault();
-        sendGamepadMsg({player: player, direction: 'left'});
-    });
-
-    dirRight.addEventListener('click', function (e) {
-        e.preventDefault();
-        sendGamepadMsg({player: player, direction: 'right'});
+    axisChoices.forEach(function (axis) {
+        dirElements[axis] = {};
+        dirChoices.forEach(function (dir) {
+            dirElements[axis][dir] = document.querySelector(
+                '.direction__' + axis + '--' + dir);
+            dirElements[axis][dir].addEventListener('click', _pd(function () {
+                sendGamepadMsg({
+                    player: player,
+                    axis: axis,
+                    direction: dir
+                });
+            }));
+        });
     });
 
 })();

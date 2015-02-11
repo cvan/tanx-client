@@ -32,30 +32,73 @@
         sock.send(JSON.stringify({n: 'gamepad', d: data}));
     };
 
-    function _pd(func) {
-        return function (e) {
-            e.preventDefault();
-            func.apply(this, arguments);
-        };
+    var ctx = t.getContext('2d');
+    t.width = window.innerWidth;
+    t.height = window.innerHeight;
+    var cx = t.width/2;
+    var cy = t.height/2;
+    var s = Math.min(t.width, t.height) * 0.4;
+    ctx.strokeStyle = '#0f0';
+
+    t.addEventListener('touchmove', handle);
+    t.addEventListener('mousemove', handle);
+
+    function handle(e) {
+        e.preventDefault();
+        dx = cx - e.pageX;
+        dy = cy - e.pageY;
+
+        h = Math.sqrt(dy * dy + dx * dx);
+        a = Math.atan2(dy,dx);
+        draw();
     }
 
-    var axisChoices = ['left', 'right'];
-    var dirChoices = ['up', 'down', 'left', 'right'];
-    var dirElements = {};
+    setInterval(draw, 50);
 
-    axisChoices.forEach(function (axis) {
-        dirElements[axis] = {};
-        dirChoices.forEach(function (dir) {
-            dirElements[axis][dir] = document.querySelector(
-                '.direction__' + axis + '--' + dir);
-            dirElements[axis][dir].addEventListener('click', _pd(function () {
-                sendGamepadMsg({
-                    player: player,
-                    axis: axis,
-                    direction: dir
-                });
-            }));
-        });
-    });
+    function ellipse(cx, cy, rx, ry) {
+        for (var i = 0; i <= 6; i++) {
+            var a = i / 3 * 3.14159;
+            var x = cx + Math.sin(a) * rx;
+            var y = cy + Math.cos(a) * ry;
+            if (i) {
+                ctx.lineTo(x, y);
+            } else {
+                ctx.moveTo(x, y);
+            }
+        }
+    }
+
+    ctx.translate(cx, cy);
+    ctx.lineWidth = 2;
+    var n = 6;
+
+    function draw() {
+        var l = Math.min(h, s);
+
+        ctx.clearRect(-cx, -cy, t.width, t.height);
+        for (var i = 0; i <= n; i++) {
+            var rad = (1.2 - (i / n)) * s;
+            var r2 = i / n * l;
+            var x = -Math.cos(a) * r2;
+            var y = -Math.sin(a) * r2;
+            ctx.beginPath();
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(a);
+            ctx.scale(Math.cos(Math.asin(l / (s * 1.1))), 1);
+            ctx.rotate(-a);
+            ellipse(0, 0, rad, rad);
+            ctx.fillStyle = 'rgb(0,' + (i / n * 255|0) + ',0)';
+            ctx.fill();
+            ctx.restore();
+
+            sendGamepadMsg({
+                player: player,
+                type: 'direction',
+                x: x,
+                y: y
+            });
+        }
+    }
 
 })();

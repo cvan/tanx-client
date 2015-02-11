@@ -8,20 +8,7 @@
         <link rel="stylesheet" href="gamepad-host.css" media="all">
     </head>
     <body>
-        <form class="form--controls c">
-            <div class="axis axis--left">
-                <button class="direction direction--up direction__left--up">▲</button>
-                <button class="direction direction--down direction__left--down">▼</button>
-                <button class="direction direction--left direction__left--left">◀</button>
-                <button class="direction direction--right direction__left--right">▶</button>
-            </div>
-            <div class="axis axis--right">
-                <button class="direction direction--up direction__right--up">▲</button>
-                <button class="direction direction--down direction__right--down">▼</button>
-                <button class="direction direction--left direction__right--left">◀</button>
-                <button class="direction direction--right direction__right--right">▶</button>
-            </div>
-        </form>
+        <canvas id="t"></canvas>
         <script src="sock.js"></script>
         <script src="gamepad-host.js"></script>
     </body>

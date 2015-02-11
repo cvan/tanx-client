@@ -73,20 +73,24 @@ pc.script.create('touch', function (context) {
                 this.joyRight.height = this.size;
                 
                 var ctx = this.joyLeft.ctx;
-                this.drawHex(ctx, 'rgba(255, 255, 255, .07)');
+                this.drawHex(ctx, 'rgba(255, 255, 255, .07)', '#2ecc71');
                 
                 ctx = this.joyRight.ctx;
-                this.drawHex(ctx, 'rgba(255, 255, 255, .07)');
+                this.drawHex(ctx, 'rgba(255, 255, 255, .07)', '#2ecc71');
             }
         },
         
-        drawHex: function(ctx, color) {
+        drawHex: function(ctx, color, stroke) {
             ctx.beginPath();
-            for (var i = 0; i < 6; i++) {
+            for (var i = 0; i < 7; i++) {
                 ctx.lineTo(this.size / 2 * Math.sin(Math.PI * 2 / 6 * i) + this.size / 2, this.size / 2 * Math.cos(Math.PI * 2 / 6 * i) + this.size / 2);
             }
             ctx.fillStyle = color;
             ctx.fill();
+            if (stroke) {
+                ctx.strokeStyle = stroke;
+                ctx.stroke();
+            }
         },
 
         update: function (dt) {
@@ -94,83 +98,87 @@ pc.script.create('touch', function (context) {
             
             this.resize();
             
-            this.forEach('start', function(touch) {
-                var rect = this.joyLeft.getBoundingClientRect();
-                this.vec.set(touch.x - rect.left - this.size / 2, touch.y - rect.top - this.size / 2);
-                if (this.vec.length() < (this.size / 2)) {
-                    touch.joy = this.joyLeft;
-                }
-                
-                rect = this.joyRight.getBoundingClientRect();
-                this.vec.set(touch.x - rect.left - this.size / 2, touch.y - rect.top - this.size / 2);
-                if (this.vec.length() < (this.size / 2)) {
-                    touch.joy = this.joyRight;
-                }
-            }.bind(this));
-            
-            this.forEach('down', function(touch) {
-                if (! touch.joy) return;
-               
-                var rect = touch.joy.getBoundingClientRect();
-                this.vec.set(touch.x - rect.left - this.size / 2, touch.y - rect.top - this.size / 2);
-                
-                if (this.vec.length() > this.size / 2 - 24) {
-                    this.vec.normalize().mul(this.tmp.set(this.size / 2 - 24, this.size / 2 - 24));
-                }
-                
-                var ctx = touch.joy.ctx;
-                ctx.clearRect(0, 0, touch.joy.width, touch.joy.height);
-                
-                this.drawHex(ctx, 'rgba(255, 255, 255, .03)');
-
-                ctx.beginPath();
-                for (var i = 0; i < 6; i++) {
-                    ctx.lineTo(24 * Math.sin(Math.PI * 2 / 6 * i) + this.size / 2 + this.vec.x, 24 * Math.cos(Math.PI * 2 / 6 * i) + this.size / 2 + this.vec.y);
-                }
-                ctx.fillStyle = 'rgba(255, 255, 255, .1)';
-                ctx.fill();
-                
-                if (touch.joy == this.joyRight && this.link.link) {
-                    this.link.mPos = [ (this.vec.x / (this.size / 2)) * (context.graphicsDevice.width / 2), (this.vec.y / (this.size / 2)) * (context.graphicsDevice.height / 2) ];
-                    this.vec.normalize();
+            if (this.client.connected) {
+                this.forEach('start', function(touch) {
+                    var rect = this.joyLeft.getBoundingClientRect();
+                    this.vec.set(touch.x - rect.left - this.size / 2, touch.y - rect.top - this.size / 2);
+                    if (this.vec.length() < (this.size / 2)) {
+                        touch.joy = this.joyLeft;
+                    }
                     
-                    var t =      this.vec.x * Math.sin(Math.PI * 0.75) - this.vec.y * Math.cos(Math.PI * 0.75);
-                    this.vec.y = this.vec.y * Math.sin(Math.PI * 0.75) + this.vec.x * Math.cos(Math.PI * 0.75);
-                    this.vec.x = t;
+                    rect = this.joyRight.getBoundingClientRect();
+                    this.vec.set(touch.x - rect.left - this.size / 2, touch.y - rect.top - this.size / 2);
+                    if (this.vec.length() < (this.size / 2)) {
+                        touch.joy = this.joyRight;
+                    }
+                }.bind(this));
+                
+                this.forEach('down', function(touch) {
+                    if (! touch.joy) return;
+                   
+                    var rect = touch.joy.getBoundingClientRect();
+                    this.vec.set(touch.x - rect.left - this.size / 2, touch.y - rect.top - this.size / 2);
                     
-                    this.link.angle = Math.floor(Math.atan2(this.vec.x, this.vec.y) / (Math.PI / 180));
-                    this.link.link.targeting(this.link.angle);
-                    this.client.shoot(true);
-                } else if (touch.joy == this.joyLeft) {
-                    if (Date.now() - this.lastMove > 200) {
-                        this.lastMove = Date.now();
+                    if (this.vec.length() > this.size / 2 - 24) {
+                        this.vec.normalize().mul(this.tmp.set(this.size / 2 - 24, this.size / 2 - 24));
+                    }
+                    
+                    var ctx = touch.joy.ctx;
+                    ctx.clearRect(0, 0, touch.joy.width, touch.joy.height);
+                    
+                    this.drawHex(ctx, 'rgba(255, 255, 255, .03)', '#2ecc71');
+    
+                    ctx.beginPath();
+                    for (var i = 0; i < 7; i++) {
+                        ctx.lineTo(24 * Math.sin(Math.PI * 2 / 6 * i) + this.size / 2 + this.vec.x, 24 * Math.cos(Math.PI * 2 / 6 * i) + this.size / 2 + this.vec.y);
+                    }
+                    ctx.fillStyle = 'rgba(255, 255, 255, .1)';
+                    ctx.fill();
+                    ctx.strokeStyle = '#2ecc71';
+                    ctx.stroke();
+                    
+                    if (touch.joy == this.joyRight && this.link.link) {
+                        this.link.mPos = [ (this.vec.x / (this.size / 2)) * (context.graphicsDevice.width / 2), (this.vec.y / (this.size / 2)) * (context.graphicsDevice.height / 2) ];
                         this.vec.normalize();
                         
                         var t =      this.vec.x * Math.sin(Math.PI * 0.75) - this.vec.y * Math.cos(Math.PI * 0.75);
                         this.vec.y = this.vec.y * Math.sin(Math.PI * 0.75) + this.vec.x * Math.cos(Math.PI * 0.75);
                         this.vec.x = t;
-
-                        this.client.socket.send('move', [ this.vec.x, this.vec.y ]);
+                        
+                        this.link.angle = Math.floor(Math.atan2(this.vec.x, this.vec.y) / (Math.PI / 180));
+                        this.link.link.targeting(this.link.angle);
+                        this.client.shoot(true);
+                    } else if (touch.joy == this.joyLeft) {
+                        if (Date.now() - this.lastMove > 200) {
+                            this.lastMove = Date.now();
+                            this.vec.normalize();
+                            
+                            var t =      this.vec.x * Math.sin(Math.PI * 0.75) - this.vec.y * Math.cos(Math.PI * 0.75);
+                            this.vec.y = this.vec.y * Math.sin(Math.PI * 0.75) + this.vec.x * Math.cos(Math.PI * 0.75);
+                            this.vec.x = t;
+    
+                            this.client.socket.send('move', [ this.vec.x, this.vec.y ]);
+                        }
                     }
-                }
+                    
+                }.bind(this));
                 
-            }.bind(this));
-            
-            this.forEach('end', function(touch) {
-                if (! touch.joy) return;
-                
-                var ctx = touch.joy.ctx;
-                ctx.clearRect(0, 0, touch.joy.width, touch.joy.height);
-                
-                this.drawHex(ctx, 'rgba(255, 255, 255, .1)');
-
-                if (touch.joy == this.joyRight) {
-                    this.client.shoot(false);
-                    this.link.mPos = [ 0, 0 ];
-                } else {
-                    this.client.socket.send('move', [ 0, 0 ]);
-                }
-            }.bind(this));
+                this.forEach('end', function(touch) {
+                    if (! touch.joy) return;
+                    
+                    var ctx = touch.joy.ctx;
+                    ctx.clearRect(0, 0, touch.joy.width, touch.joy.height);
+                    
+                    this.drawHex(ctx, 'rgba(255, 255, 255, .1)', '#2ecc71');
+    
+                    if (touch.joy == this.joyRight) {
+                        this.client.shoot(false);
+                        this.link.mPos = [ 0, 0 ];
+                    } else {
+                        this.client.socket.send('move', [ 0, 0 ]);
+                    }
+                }.bind(this));
+            }
             
             this.touchFlush();
         },

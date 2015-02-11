@@ -8,7 +8,7 @@ pc.script.create('tanks', function (context) {
         initialize: function () {
             this.tank = context.root.findByName('tank');
             this.tank.enabled = false;
-            this.tank.findByName('light').enabled = false;
+            // this.tank.findByName('light').enabled = false;
             
             this.tanks = context.root.findByName('tanks');
             this.client = context.root.getChildren()[0].script.client;
@@ -37,9 +37,9 @@ pc.script.create('tanks', function (context) {
                 this.setColor(args.color);
                 this.angle(args.angle);
 
-                if (self.client.id == args.owner) {
-                    this.script.tank.light.enabled = true;
-                }
+                // if (self.client.id == args.owner) {
+                //     this.script.tank.light.enabled = true;
+                // }
             });
         },
         

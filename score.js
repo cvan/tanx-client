@@ -9,6 +9,7 @@ pc.script.create('score', function (context) {
         this.element = document.createElement('div');
         this.element.id = 'points';
         
+        this.element.style.display = 'none';
         this.element.style.position = 'absolute';
         this.element.style.top = (10 * this.size + 16) + 'px';
         this.element.style.right = (10 * this.size + 16) + 'px';
@@ -38,6 +39,7 @@ pc.script.create('score', function (context) {
         // text block
         var text = this.text = document.createElement('div');
         text.id = 'pointsText';
+        text.style.display = 'none';
         text.style.position = 'absolute';
         text.style.width = '200px';
         text.style.height = '200px';

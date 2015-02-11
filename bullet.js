@@ -21,8 +21,8 @@ pc.script.create('bullet', function (context) {
             if (tmpVec.copy(this.entity.targetPosition).sub(pos).length() < this.entity.speed * dt * 1.5 ||
                 pos.x < 0 ||
                 pos.z < 0 ||
-                pos.x > 32 ||
-                pos.z > 32) {
+                pos.x > 48 ||
+                pos.z > 48) {
                     
                 var i = Math.floor(Math.random() * 2 + 1);
                 while(i--) {

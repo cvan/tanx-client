@@ -11,9 +11,13 @@ pc.script.create('client', function (context) {
         initialize: function () {
             this.tanks = context.root.getChildren()[0].script.tanks;
             this.bullets = context.root.getChildren()[0].script.bullets;
+            this.pickables = context.root.getChildren()[0].script.pickables;
             
             var self = this;
-            var socket = this.socket = new Socket({ url: 'http://localhost:30043/socket' });
+            // var socket = this.socket = new Socket({ url: 'http://localhost:30043/socket' });
+            var socket = this.socket = new Socket({ url: 'http://tanx.playcanvas.com/socket' });
+            
+            this.connected = false;
             
             socket.on('error', function(err) {
                 console.log(err);
@@ -21,11 +25,10 @@ pc.script.create('client', function (context) {
             
             socket.on('init', function(data) {
                 self.id = data.id;
+                self.connected = true;
             });
             
             socket.on('tank.new', function(data) {
-                // data.color = [ 1, 0, 0 ];
-                // console.log(data);
                 self.tanks.new(data);
             });
             
@@ -45,6 +48,19 @@ pc.script.create('client', function (context) {
                     for(var i = 0; i < data.bulletsDelete.length; i++)
                         self.bullets.delete(data.bulletsDelete[i]);
                 }
+                
+                // pickables add
+                if (data.pickable) {
+                    for(var i = 0; i < data.pickable.length; i++)
+                        self.pickables.new(data.pickable[i]);
+                }
+                
+                // pickable delete
+                if (data.pickableDelete) {
+                    for(var i = 0; i < data.pickableDelete.length; i++)
+                        self.pickables.delete(data.pickableDelete[i]);
+                }
+                
 
                 // tanks update
                 if (data.tanks)
@@ -64,11 +80,36 @@ pc.script.create('client', function (context) {
         },
 
         update: function (dt) {
+            if (! this.connected)
+                return;
+                
             // collect keyboard input
             var movement = [
                 context.keyboard.isPressed(pc.input.KEY_D) - context.keyboard.isPressed(pc.input.KEY_A),
                 context.keyboard.isPressed(pc.input.KEY_S) - context.keyboard.isPressed(pc.input.KEY_W)
             ];
+            
+            // gamepad controls
+            // AUTHOR: Potch
+            
+            // gamepad movement axes
+            movement[0] += context.gamepads.getAxis(pc.PAD_1, pc.PAD_L_STICK_X);
+            movement[1] += context.gamepads.getAxis(pc.PAD_1, pc.PAD_L_STICK_Y);
+            
+            // gamepad firing axes
+            var gpx = context.gamepads.getAxis(pc.PAD_1, pc.PAD_R_STICK_X);
+            var gpy = context.gamepads.getAxis(pc.PAD_1, pc.PAD_R_STICK_Y);
+            
+            // gamepad shooting
+            if (gpx * gpx + gpy * gpy > .25) {
+                this.shoot(true);
+                this.gpShot = true;
+            } else {
+                if (this.gpShot) {
+                    this.shoot(false);
+                    this.gpShot = false;
+                }
+            }
             
             // rotate vector
             var t =       movement[0] * Math.sin(Math.PI * 0.75) - movement[1] * Math.cos(Math.PI * 0.75);
@@ -91,6 +132,9 @@ pc.script.create('client', function (context) {
         },
         
         shoot: function(state) {
+            if (! this.connected)
+                return;
+                
             if (this.shootingState !== state) {
                 this.shootingState = state;
                 

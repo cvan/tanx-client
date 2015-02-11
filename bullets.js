@@ -1,5 +1,6 @@
 pc.script.create('bullets', function (context) {
     var vecTmp = new pc.Vec3();
+    var specialMaterial = null;
     
     var Bullets = function (entity) {
         this.entity = entity;
@@ -12,6 +13,9 @@ pc.script.create('bullets', function (context) {
             this.bullet.enabled = false;
             
             this.bullets = context.root.findByName('bullets');
+            
+            if (! specialMaterial)
+                specialMaterial = context.root.findByName('bullet-special').model.material;
         },
 
         new: function(data) {
@@ -29,7 +33,12 @@ pc.script.create('bullets', function (context) {
             bullet.setPosition(tank.getPosition().x + vecTmp.x, 0.9, tank.getPosition().z + vecTmp.z);
             bullet.targetPosition = new pc.Vec3(data.tx, 0.9, data.ty);
             bullet.speed = data.sp * 50 * 0.5;
-            bullet.model.material = tank.script.tank.matBullet;
+            
+            // special
+            if (data.s) {
+                bullet.model.material = specialMaterial;
+                bullet.setLocalScale(.3, .2, .3);
+            }
             
             this.bullets.addChild(bullet);
         },

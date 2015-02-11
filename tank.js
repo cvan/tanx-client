@@ -49,7 +49,7 @@ var slerp = function (lhs, rhs, alpha) {
 pc.script.create('tank', function (context) {
     var matBase = null;
     var matTracks = null;
-    var matBullet = null;
+    // var matBullet = null;
     
     var Tank = function (entity) {
         this.entity = entity;
@@ -60,7 +60,7 @@ pc.script.create('tank', function (context) {
         this.targetPoint = new pc.Quat();
         
         this.matBase = null;
-        this.matBullet = null;
+        // this.matBullet = null;
         // this.matTracks = null;
         this.head = null;
         this.hpBar = null;
@@ -81,10 +81,7 @@ pc.script.create('tank', function (context) {
             this.hpBarRight = this.hpBar.findByName('right');
             
             // find light
-            this.light = this.entity.findByName('light');
-            
-            // shadow
-            this.shadow = this.entity.findByName('shadow');
+            // this.light = this.entity.findByName('light');
             
             // clone material
             if (matBase == null) {
@@ -96,7 +93,7 @@ pc.script.create('tank', function (context) {
             // console.log(asset);
             this.matBase = matBase.clone();
             this.matTracks = matTracks.clone();
-            this.matBullet = matBullet.clone();
+            // this.matBullet = matBullet.clone();
             
             this.tracksOffset = 0;
             
@@ -109,8 +106,8 @@ pc.script.create('tank', function (context) {
             this.matTracks.emissive.set(color[0], color[1], color[2], 1);
             this.matTracks.update();
             
-            this.matBullet.emissive.set(color[0], color[1], color[2], 1);
-            this.matBullet.update();
+            // this.matBullet.emissive.set(color[0], color[1], color[2], 1);
+            // this.matBullet.update();
             
             this.blinkParts = this.entity.findByLabel('sub-part');
             
@@ -127,7 +124,9 @@ pc.script.create('tank', function (context) {
             }.bind(this));
             
             // add shadow to blinkParts
-            this.blinkParts.push(this.shadow);
+            this.blinkParts.push(this.entity.findByName('shadow'));
+            // add glow to blinkParts
+            this.blinkParts.push(this.entity.findByName('glow'));
 
             this.entity.fire('ready');
             
@@ -138,14 +137,14 @@ pc.script.create('tank', function (context) {
             this.deadBefore = true;
             this.flashState = false;
             
-            if (context.root.getChildren()[0].script.client.id !== this.entity.owner) {
-                this.light.destroy();
-                this.light = null;
-            } else {
+            if (context.root.getChildren()[0].script.client.id === this.entity.owner) {
+                // this.light.destroy();
+                // this.light = null;
+            // } else {
                 this.own = true;
-                this.light.enabled = true;
-                this.light.light.color.set(color[0], color[1], color[2], 1);
-                this.light.light.refreshProperties();
+                // this.light.enabled = true;
+                // this.light.light.color.set(color[0], color[1], color[2], 1);
+                // this.light.light.refreshProperties();
                 
                 this.uiHP = context.root.getChildren()[0].script.hp;
             }
@@ -170,9 +169,9 @@ pc.script.create('tank', function (context) {
                 // hide
                 //      hp bar
                 this.hpBar.enabled = false;
-                //      light
-                if (this.light)
-                    this.light.enabled = false;
+                // //      light
+                // if (this.light)
+                //     this.light.enabled = false;
                 //      parts
                 for(var i = 0; i < this.blinkParts.length; i++) {
                     this.blinkParts[i].model.enabled = state;
@@ -244,9 +243,9 @@ pc.script.create('tank', function (context) {
                 var state = (Math.floor((Date.now() - this.respawned) / 100) % 2) == 1;
                 if (this.flashState !== state) {
                     this.flashState = state;
-                    // light
-                    if (this.light)
-                        this.light.enabled = state;
+                    // // light
+                    // if (this.light)
+                    //     this.light.enabled = state;
                     // parts
                     for(var i = 0; i < this.blinkParts.length; i++) {
                         this.blinkParts[i].model.enabled = state;
@@ -254,9 +253,9 @@ pc.script.create('tank', function (context) {
                 }
             } else if (! this.flashState) {
                 this.flashState = true;
-                // light
-                if (this.light)
-                    this.light.enabled = true;
+                // // light
+                // if (this.light)
+                //     this.light.enabled = true;
                 // parts
                 for(var i = 0; i < this.blinkParts.length; i++) {
                     this.blinkParts[i].model.enabled = true;

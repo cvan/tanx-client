@@ -1,0 +1,55 @@
+* {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    background: #000;
+}
+
+body {
+    font: 1rem/1.5 'Fira Sans', sans-serif;
+    text-rendering: optimizeLegibility;
+}
+
+.axis {
+    margin: 60px auto;
+    height: 300px;
+    position: relative;
+    text-align: center;
+    width: 450px;
+}
+
+button {
+    font-family: inherit;
+}
+
+.direction {
+    border: 0;
+    padding: 5px 15px;
+    position: absolute;
+}
+
+.direction--up {
+    top: 0;
+}
+
+.direction--down {
+    bottom: 0;
+}
+
+.direction--up,
+.direction--down {
+    top: 42%;
+}
+
+.direction--left {
+    left: 0;
+}
+
+.direction--right {
+    right: 0;
+}

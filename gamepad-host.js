@@ -48,7 +48,11 @@
     t.addEventListener('touchleave', zero);
     t.addEventListener('touchend', zero);
 
+    var dx = 0;
+    var dy = 0;
     var active = false;
+
+    draw();
 
     function zero() {
         active = false;

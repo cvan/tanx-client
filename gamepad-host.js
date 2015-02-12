@@ -10,15 +10,44 @@
     var dirLeft = document.querySelector('.direction--left');
     var dirRight = document.querySelector('.direction--right');
 
-    // TODO: Do not harcode WS URL.
+    var lastPos;
+
+    var sendData = function (data) {
+        // noop until we are connected to the WebSocket server.
+        console.warn('Server offline; data ignored:', JSON.stringify(data));
+    };
+
+    // TODO: Do not hardcode WS URL.
 
     var sock = new SockJS('http://localhost:30043/socket');
-    sock.onopen = function () {
-        console.log('WS open');
+
+    sock.sendMessage = function(name, data) {
+        sock.send(JSON.stringify({
+            n: name,
+            d: data
+        }));
     };
+
+    sock.onopen = function() {
+        console.log('WS open');
+
+        sendData = function (name, data) {
+            console.log('Data sent:', name, JSON.stringify(data));
+            sock.sendMessage(name, data);
+        };
+    };
+
+    sock.onconnect = function() {
+        console.log('WS connected');
+    };
+
     sock.onmessage = function(e) {
         console.log('WS message:', e.data);
+        if (e.data.n === 'init') {
+            sock.sendMessage('register.gamepad', player);
+        }
     };
+
     sock.onclose = function() {
         console.log('WS close');
     };
@@ -27,10 +56,6 @@
         console.log('Closed connection to WS server');
         sock.close();
     });
-
-    var sendGamepadMsg = function (data) {
-        sock.send(JSON.stringify({n: 'gamepad', d: data}));
-    };
 
     var ctx = t.getContext('2d');
     t.width = window.innerWidth;
@@ -107,9 +132,12 @@
     ctx.translate(cx, cy);
     ctx.lineWidth = 2;
     var n = 6;
+
+    var lastAngle;
+
     function draw() {
         var h = Math.sqrt(dy * dy + dx * dx);
-        var a = Math.atan2(dy,dx);
+        var a = Math.atan2(dy, dx);
 
         var l = Math.min(h, s);
 
@@ -132,12 +160,16 @@
             ctx.restore();
         }
 
-        // sendGamepadMsg({
-        //     player: player,
-        //     type: 'direction',
-        //     x: x,
-        //     y: y
-        // });
+        if (h / s < 0.25) {
+            return;
+        }
+
+        var angle = -Math.atan2(dy, dx) * (180 / 3.14159);
+        angle = ((angle - 45 + 180 + 360) % 360) - 180;
+
+        if (angle !== lastAngle) {
+            sendData('gamepad', {angle: angle, player: player});
+        }
     }
 
 })();

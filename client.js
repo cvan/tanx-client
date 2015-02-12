@@ -14,11 +14,25 @@ pc.script.create('client', function (context) {
             this.pickables = context.root.getChildren()[0].script.pickables;
             
             var self = this;
-            // var socket = this.socket = new Socket({ url: 'http://localhost:30043/socket' });
-            var socket = this.socket = new Socket({ url: 'http://tanx.playcanvas.com/socket' });
+            var socket = this.socket = new Socket({ url: 'http://localhost:30043/socket' });
+            // var socket = this.socket = new Socket({ url: 'http://tanx.playcanvas.com/socket' });
             
             this.connected = false;
             
+            socket.on('open', function() {
+                console.log('WS open');
+            });
+
+            socket.on('connect', function() {
+                console.log('WS connected');
+
+                var qs_player = /[\?&]player=([\w\-]+)/i.exec(window.location.search);
+                var player = qs_player && qs_player[1];
+                console.log('player:', player);
+
+                socket.send('register.game', player);
+            });
+
             socket.on('error', function(err) {
                 console.log(err);
             });
@@ -35,7 +49,7 @@ pc.script.create('client', function (context) {
             socket.on('tank.delete', function(data) {
                 self.tanks.delete(data);
             });
-            
+
             socket.on('update', function(data) {
                 // bullets add
                 if (data.bullets) {
@@ -82,7 +96,7 @@ pc.script.create('client', function (context) {
         update: function (dt) {
             if (! this.connected)
                 return;
-                
+
             // collect keyboard input
             var movement = [
                 context.keyboard.isPressed(pc.input.KEY_D) - context.keyboard.isPressed(pc.input.KEY_A),

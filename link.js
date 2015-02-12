@@ -16,7 +16,7 @@ pc.script.create('link', function (context) {
         initialize: function () {
             context.mouse.on(pc.input.EVENT_MOUSEMOVE, this.onMouseMove, this);
             this.client = context.root.getChildren()[0].script.client;
-            
+
             if (! ('ontouchstart' in document.documentElement)) {
                 this.target = context.root.findByName('target');
                 this.mouse = {
@@ -48,7 +48,7 @@ pc.script.create('link', function (context) {
                     if (this.target)
                         this.target.enabled = true;
                 }
-                
+
                 if (target) {
                     // rotate vector
                     var rot = this.mPos.slice(0);

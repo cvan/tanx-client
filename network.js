@@ -17,7 +17,7 @@ Socket.ReservedNames = {
     'message': 1
 };
 
-Socket.prototype._onopen = function() {
+Socket.prototype._onopen = function(event) {
     this._connected = true;
     this.fire('connect', event);
 };

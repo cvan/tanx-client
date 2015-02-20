@@ -10,15 +10,44 @@
     var dirLeft = document.querySelector('.direction--left');
     var dirRight = document.querySelector('.direction--right');
 
-    // TODO: Do not harcode WS URL.
+    var lastPos;
+
+    var sendData = function (data) {
+        // noop until we are connected to the WebSocket server.
+        console.warn('Server offline; data ignored:', JSON.stringify(data));
+    };
+
+    // TODO: Do not hardcode WS URL.
 
     var sock = new SockJS('http://localhost:30043/socket');
-    sock.onopen = function () {
-        console.log('WS open');
+
+    sock.sendMessage = function(name, data) {
+        sock.send(JSON.stringify({
+            n: name,
+            d: data
+        }));
     };
+
+    sock.onopen = function() {
+        console.log('WS open');
+
+        sendData = function (name, data) {
+            console.log('Data sent:', name, JSON.stringify(data));
+            sock.sendMessage(name, data);
+        };
+    };
+
+    sock.onconnect = function() {
+        console.log('WS connected');
+    };
+
     sock.onmessage = function(e) {
         console.log('WS message:', e.data);
+        if (e.data.n === 'init') {
+            sock.sendMessage('register.gamepad', player);
+        }
     };
+
     sock.onclose = function() {
         console.log('WS close');
     };
@@ -28,34 +57,119 @@
         sock.close();
     });
 
-    var sendGamepadMsg = function (data) {
-        sock.send(JSON.stringify({n: 'gamepad', d: data}));
-    };
+    var ctx = t.getContext('2d');
+    t.width = window.innerWidth;
+    t.height = window.innerHeight;
+    var cx = t.width / 2;
+    var cy = t.height / 2;
+    var s = Math.min(t.width, t.height) * 0.4;
+    ctx.strokeStyle = '#0f0';
 
-    function _pd(func) {
-        return function (e) {
-            e.preventDefault();
-            func.apply(this, arguments);
-        };
+    var color = [0, 128, 255];
+
+    t.addEventListener('touchmove', handle);
+    t.addEventListener('mousemove', handle);
+    t.addEventListener('mouseout', zero);
+    t.addEventListener('touchleave', zero);
+    t.addEventListener('touchend', zero);
+
+    var dx = 0;
+    var dy = 0;
+    var active = false;
+
+    draw();
+
+    function zero() {
+        active = false;
+        draw();
     }
 
-    var axisChoices = ['left', 'right'];
-    var dirChoices = ['up', 'down', 'left', 'right'];
-    var dirElements = {};
+    function handle(e) {
+        e.preventDefault();
+        active = true;
+        dx = cx - e.pageX;
+        dy = cy - e.pageY;
+        draw();
+    }
 
-    axisChoices.forEach(function (axis) {
-        dirElements[axis] = {};
-        dirChoices.forEach(function (dir) {
-            dirElements[axis][dir] = document.querySelector(
-                '.direction__' + axis + '--' + dir);
-            dirElements[axis][dir].addEventListener('click', _pd(function () {
-                sendGamepadMsg({
-                    player: player,
-                    axis: axis,
-                    direction: dir
-                });
-            }));
-        });
-    });
+    function terp() {
+        if (active) {
+            return;
+        }
+        if (dx * dx > 10 || dy * dy > 10) {
+            dx = (dx * 0.5) | 0;
+            dy = (dy * 0.5) | 0;
+        } else {
+            dx = 0;
+            dy = 0;
+        }
+        draw();
+    }
+
+    setInterval(terp, 20);
+
+    function ellipse(cx, cy, rx, ry) {
+        for (var i = 0; i <= 6; i++) {
+            var a = i / 3 * 3.14159;
+            var x = cx + Math.sin(a) * rx;
+            var y = cy + Math.cos(a) * ry;
+            if (i) {
+                ctx.lineTo(x, y);
+            } else {
+                ctx.moveTo(x, y);
+            }
+        }
+    }
+
+    function clerp(c, i) {
+        return [
+            c[0] * i | 0,
+            c[1] * i | 0,
+            c[2] * i | 0
+        ];
+    }
+
+    ctx.translate(cx, cy);
+    ctx.lineWidth = 2;
+    var n = 6;
+
+    var lastAngle;
+
+    function draw() {
+        var h = Math.sqrt(dy * dy + dx * dx);
+        var a = Math.atan2(dy, dx);
+
+        var l = Math.min(h, s);
+
+        ctx.clearRect(-cx, -cy, t.width, t.height);
+        for (var i = 0; i <= n; i++) {
+            var rad = (1.2 - (i / n)) * s;
+            var r2 = i / n * l;
+            var x = -Math.cos(a) * r2;
+            var y = -Math.sin(a) * r2;
+            ctx.beginPath();
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(a);
+            ctx.scale(Math.cos(Math.asin(l / (s * 1.1))), 1);
+            ctx.rotate(-a);
+            ellipse(0, 0, rad, rad);
+            var c = clerp(color, (i + 1) / (n + 1));
+            ctx.fillStyle = 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (i / n / 2 + 0.5) + ')';
+            ctx.fill();
+            ctx.restore();
+        }
+
+        if (h / s < 0.25) {
+            return;
+        }
+
+        var angle = -Math.atan2(dy, dx) * (180 / 3.14159);
+        angle = ((angle - 45 + 180 + 360) % 360) - 180;
+
+        if (angle !== lastAngle) {
+            sendData('gamepad', {angle: angle, player: player});
+        }
+    }
 
 })();

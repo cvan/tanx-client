@@ -61,3 +61,12 @@ button {
 .direction--right {
     right: 10%;
 }
+
+#t {
+    background: #000;
+}
+
+body, #t {
+    height: 100%;
+    width: 100%;
+}

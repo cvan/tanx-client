@@ -6,67 +6,40 @@
     padding: 0;
 }
 
-html {
-    background: #000;
-}
-
 body {
-    font: 1rem/1.5 'Fira Sans', sans-serif;
-    margin: 0 auto;
-    text-rendering: optimizeLegibility;
-    width: 600px;
+    background: #000;
+    height: 100%;
 }
 
-.c:after {
-    content: '';
-    clear: both;
-}
-
-.axis {
-    float: left;
-    height: 200px;
-    margin: 60px auto;
-    position: relative;
-    text-align: center;
-    width: 300px;
-}
-
-button {
-    font-family: inherit;
-}
-
-.direction {
-    border: 0;
-    padding: 5px 15px;
+#out {
+    color: #fff;
+    font-size: 4em;
+    left: 0;
+    pointer-events: none;
     position: absolute;
-}
-
-.direction--up {
     top: 0;
 }
 
-.direction--down {
-    bottom: 0;
-}
-
-.direction--left,
-.direction--right {
-    top: 42%;
-}
-
-.direction--left {
-    left: 10%;
-}
-
-.direction--right {
-    right: 10%;
-}
-
-#t {
-    background: #000;
-}
-
-body, #t {
+.pad {
+    flex: 1;
     height: 100%;
+    position: absolute;
+    top: 0;
+    width: 50%;
+}
+
+.pad-container {
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
     width: 100%;
+}
+
+.pad--move {
+    left: 0;
+}
+
+.pad--aim {
+    right: 0;
 }

@@ -62,7 +62,9 @@
     });
 
     function clerp(c, i) {
-        return [c[0] * i | 0, c[1] * i | 0, c[2] * i | 0];
+        return [c[0] * i | 0,
+                c[1] * i | 0,
+                c[2] * i | 0];
     }
 
     function Stick(el) {
@@ -75,7 +77,7 @@
         var dy = 0;
         var cx = el.width / 2;
         var cy = el.height / 2;
-        var size = Math.min(el.width, el.height) * .4;
+        var size = Math.min(el.width, el.height) * 0.4;
         ctx.strokeStyle = '#0f0';
         ctx.translate(cx, cy);
 
@@ -89,7 +91,7 @@
             el.height = el.offsetHeight;
             cx = el.width / 2;
             cy = el.height / 2;
-            s = Math.min(el.width, el.height) * 0.4;
+            size = Math.min(el.width, el.height) * 0.4;
             ctx.translate(cx, cy);
             draw();
         });
@@ -115,7 +117,7 @@
             if (e.targetTouches) {
                 for (var i = 0; i < e.targetTouches.length; i++) {
                     if (e.targetTouches[i].identifier === finger) {
-                        x = (e.targetTouches[0].pageX - el.offsetLeft);
+                        x = e.targetTouches[0].pageX - el.offsetLeft;
                         y = e.targetTouches[0].pageY;
                         dx = cx - x;
                         dy = cy - y;
@@ -128,21 +130,22 @@
         }
 
         function terp() {
-            if (!active) {
-                if (dx * dx > 10 || dy * dy > 10 ) {
-                    dx = (dx * .7) | 0;
-                    dy = (dy * .7) | 0;
-                    setTimeout(terp, 20);
-                } else {
-                    dx = 0;
-                    dy = 0;
-                }
-                draw();
+            if (active) {
+                return;
             }
+            if (dx * dx > 10 || dy * dy > 10) {
+                dx = (dx * .7) | 0;
+                dy = (dy * .7) | 0;
+                setTimeout(terp, 20);
+            } else {
+                dx = 0;
+                dy = 0;
+            }
+            draw();
         }
 
         function ellipse(cx, cy, rx, ry) {
-            for (var i=0; i<=6; i++) {
+            for (var i = 0; i <= 6; i++) {
                 var a = i / 3 * 3.14159;
                 var x = cx + Math.sin(a) * rx;
                 var y = cy + Math.cos(a) * ry;
@@ -158,14 +161,14 @@
         ctx.lineWidth = 2;
 
         function draw() {
-            var h = Math.sqrt(dy*dy + dx*dx);
-            var a = Math.atan2(dy,dx);
+            var h = Math.sqrt(dy * dy + dx * dx);
+            var a = Math.atan2(dy ,dx);
 
             var l = Math.min(h, size);
 
             ctx.clearRect(-cx, -cy, el.width, el.height);
             for (var i = 0; i <= n; i++) {
-                var rad = (1.2-(i/n)) * size;
+                var rad = (1.2 - i / n) * size;
                 var r2 = i / n * l;
                 var x = -Math.cos(a) * r2;
                 var y = -Math.sin(a) * r2;
@@ -176,17 +179,14 @@
                 ctx.scale(Math.cos(Math.asin(l / (size * 1.1))), 1);
                 ctx.rotate(-a);
                 ellipse(0, 0, rad, rad);
-                var c = clerp(color, (i+1)/(n+1));
-                ctx.fillStyle = 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (i/n/2+.5) + ')';
+                var c = clerp(color, (i + 1) / (n + 1));
+                ctx.fillStyle = 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (i / n / 2 + 0.5) + ')';
                 ctx.fill();
                 ctx.restore();
             }
 
-            var x = dx / size;
-            var y = dy / size;
-
-            x = l * Math.cos(a) / size;
-            y = l * Math.sin(a) / size;
+            var x = l * Math.cos(a) / size;
+            var y = l * Math.sin(a) / size;
 
             if ('onchange' in self) {
                 self.onchange(x, y);

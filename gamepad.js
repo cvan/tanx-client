@@ -5,7 +5,7 @@ pc.script.create('gamepad', function (context) {
     // Creates a new Gamepad instance.
     var Gamepad = function (entity) {
         this.entity = entity;
-        this.angle = 0;
+        this.aim = {x: 0, y: 0};
     };
 
     Gamepad.prototype = {
@@ -15,7 +15,7 @@ pc.script.create('gamepad', function (context) {
 
             this.client.socket.on('gamepad', function(data) {
                 if (player === data.player) {
-                    this.angle = data.angle;
+                    this.aim = data.aim;
                 }
             }.bind(this));
         },
@@ -27,12 +27,15 @@ pc.script.create('gamepad', function (context) {
 
             if (this.link.link) {
                 this.link.mPos = [
-                    100 * Math.sin(this.angle * 3.14159 / 180),
-                    100 * Math.cos(this.angle * 3.14159 / 180)
+                    this.aim.x / 2 * -(context.graphicsDevice.width / 2),
+                    this.aim.y / 2 * -(context.graphicsDevice.height / 2)
                 ];
 
-                this.link.angle = this.angle;
-                this.link.link.targeting(this.link.angle);
+                var angle = -Math.atan2(this.aim.y, this.aim.x) * (180 / 3.14159);
+                angle = ((angle - 45 + 180 + 360) % 360) - 180;
+
+                this.link.angle = angle;
+                this.link.link.targeting(angle);
                 this.client.shoot(true);
             }
 

@@ -62,7 +62,7 @@
     t.height = window.innerHeight;
     var cx = t.width / 2;
     var cy = t.height / 2;
-    var s = Math.min(t.width, t.height) * 0.4;
+    var size = Math.min(t.width, t.height) * 0.4;
     ctx.strokeStyle = '#0f0';
 
     var color = [0, 128, 255];
@@ -133,17 +133,15 @@
     ctx.lineWidth = 2;
     var n = 6;
 
-    var lastAngle;
-
     function draw() {
         var h = Math.sqrt(dy * dy + dx * dx);
         var a = Math.atan2(dy, dx);
 
-        var l = Math.min(h, s);
+        var l = Math.min(h, size);
 
         ctx.clearRect(-cx, -cy, t.width, t.height);
         for (var i = 0; i <= n; i++) {
-            var rad = (1.2 - (i / n)) * s;
+            var rad = (1.2 - (i / n)) * size;
             var r2 = i / n * l;
             var x = -Math.cos(a) * r2;
             var y = -Math.sin(a) * r2;
@@ -151,7 +149,7 @@
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(a);
-            ctx.scale(Math.cos(Math.asin(l / (s * 1.1))), 1);
+            ctx.scale(Math.cos(Math.asin(l / (size * 1.1))), 1);
             ctx.rotate(-a);
             ellipse(0, 0, rad, rad);
             var c = clerp(color, (i + 1) / (n + 1));
@@ -160,16 +158,13 @@
             ctx.restore();
         }
 
-        if (h / s < 0.25) {
-            return;
-        }
+        var x = dx / size;
+        var y = dy / size;
 
-        var angle = -Math.atan2(dy, dx) * (180 / 3.14159);
-        angle = ((angle - 45 + 180 + 360) % 360) - 180;
+        x = l * Math.cos(a) / size;
+        y = l * Math.sin(a) / size;
 
-        if (angle !== lastAngle) {
-            sendData('gamepad', {angle: angle, player: player});
-        }
+        sendData('gamepad', {aim: {x: x, y: y}, player: player});
     }
 
 })();

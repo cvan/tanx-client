@@ -9,6 +9,7 @@
     var dirDown = document.querySelector('.direction--down');
     var dirLeft = document.querySelector('.direction--left');
     var dirRight = document.querySelector('.direction--right');
+    var color = [255, 255, 255];
 
     var state = {
         move: {x: 0, y: 0},
@@ -47,14 +48,21 @@
 
     sock.onmessage = function(e) {
         console.log('WS message:', e.data);
-        if (e.data.n === 'init') {
+        var data = JSON.parse(e.data);
+        if (data.n === 'init') {
             sock.sendMessage('register.gamepad', player);
+        }
+        if (data.n === 'gamepad.color') {
+            color = data.d;
+            moveStick.redraw();
+            aimStick.redraw();
         }
     };
 
     sock.onclose = function() {
         console.log('WS close');
     };
+
 
     window.addEventListener('beforeunload', function () {
         console.log('Closed connection to WS server');
@@ -80,8 +88,6 @@
         var size = Math.min(el.width, el.height) * 0.4;
         ctx.strokeStyle = '#0f0';
         ctx.translate(cx, cy);
-
-        var color = [255, 160, 0];
 
         var finger;
         var self = this;
@@ -113,6 +119,7 @@
 
         function handle(e) {
             e.preventDefault();
+            setupScreen();
             var x, y;
             if (e.targetTouches) {
                 for (var i = 0; i < e.targetTouches.length; i++) {
@@ -145,8 +152,9 @@
         }
 
         function ellipse(cx, cy, rx, ry) {
-            for (var i = 0; i <= 6; i++) {
-                var a = i / 3 * 3.14159;
+            var n = 6;
+            for (var i = 0; i <= n; i++) {
+                var a = i / n * (3.14159 * 2);
                 var x = cx + Math.sin(a) * rx;
                 var y = cy + Math.cos(a) * ry;
                 if (i) {
@@ -193,6 +201,8 @@
             }
         }
 
+        this.redraw = draw;
+
         draw();
     }
 
@@ -216,6 +226,22 @@
 
     function sendUpdate() {
         sendData('gamepad', state);
+    }
+
+    function launchIntoFullscreen(element) {
+        if (element.requestFullscreen) {
+            element.requestFullscreen();
+        } else if (element.mozRequestFullScreen) {
+            element.mozRequestFullScreen();
+        } else if (element.webkitRequestFullscreen) {
+            element.webkitRequestFullscreen();
+        } else if (element.msRequestFullscreen) {
+            element.msRequestFullscreen();
+        }
+    }
+
+    function setupScreen() {
+        launchIntoFullscreen(document.body);
     }
 
 })();

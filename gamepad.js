@@ -14,8 +14,16 @@ pc.script.create('gamepad', function (context) {
         initialize: function () {
             this.client = context.root.getChildren()[0].script.client;
             this.link = context.root.findByName('camera').script.link;
+            this.teams = context.root.getChildren()[0].script.teams;
 
-            this.client.socket.on('gamepad', function(data) {
+            this.client.socket.on('tank.new', function (data) {
+                this.client.socket.send('gamepad.color', {
+                    player: player,
+                    color: this.teams.colors[data.team]
+                });
+            }.bind(this));
+
+            this.client.socket.on('gamepad', function (data) {
                 if (player === data.player) {
                     this.active = true;
                     this.link.mouse.move = false;

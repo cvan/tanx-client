@@ -6,6 +6,7 @@ pc.script.create('minimap', function (context) {
         this.size = 4;
         
         this.canvas = this.prepareCanvas();
+        this.canvas.id = 'minimap';
         this.canvas.width = this.sizeInc * this.size;
         this.canvas.height = this.sizeInc * this.size;
         document.body.appendChild(this.canvas);
@@ -16,23 +17,50 @@ pc.script.create('minimap', function (context) {
         this.circles = [ ];
         this.lastCircle = Date.now();
         this.circleLife = 1000;
+        
+        var css = [
+            "#minimap {",
+            "   display: block;",
+            "   position: absolute;",
+            "   z-index: 1;",
+            "   background-color: #212224;",
+            "   cursor: default;",
+            "   transition: opacity 200ms, visibility 200ms;",
+            "   -webkit-transform: rotate(45deg);",
+            "   -moz-transform: rotate(45deg);",
+            "   -ms-transform: rotate(45deg);",
+            "   transform: rotate(45deg);",
+            "   border: 4px solid #5e7578;",
+            "   opacity: 0;",
+            "   visibility: hidden;",
+            "}",
+            "#minimap.active {",
+            "   opacity: 1;",
+            "   visibility: visible;",
+            "}"
+        ].join('\n');
+        
+        var style = document.createElement('style');
+        style.innerHTML = css;
+        document.querySelector('head').appendChild(style);
     };
 
     Minimap.prototype = {
         prepareCanvas: function() {
             var canvas = document.createElement('canvas');
-            canvas.className = 'minimap';
-            canvas.style.display = 'block';
-            canvas.style.position = 'absolute';
+            canvas.id = 'minimap';
+            // canvas.style.display = 'block';
+            // canvas.style.position = 'absolute';
             canvas.style.top = (10 * this.size + 16) + 'px';
             canvas.style.right = (10 * this.size + 16) + 'px';
-            canvas.style.zIndex = 1;
-            canvas.style.backgroundColor = 'rgba(0, 0, 0, .5)';
-            canvas.style.border = '4px solid #2ecc71';
-            canvas.style.webkitTransform = 'rotate(45deg)';
-            canvas.style.mozTransform = 'rotate(45deg)';
-            canvas.style.msTransform = 'rotate(45deg)';
-            canvas.style.transform = 'rotate(45deg)';
+            // canvas.style.zIndex = 1;
+            // canvas.style.backgroundColor = '#212224';
+            // canvas.style.border = '4px solid #5e7578';
+            // canvas.style.cursor = 'default';
+            // canvas.style.webkitTransform = 'rotate(45deg)';
+            // canvas.style.mozTransform = 'rotate(45deg)';
+            // canvas.style.msTransform = 'rotate(45deg)';
+            // canvas.style.transform = 'rotate(45deg)';
             
             return canvas;
         },
@@ -42,6 +70,7 @@ pc.script.create('minimap', function (context) {
             this.tanks = context.root.findByName('tanks');
             this.pickables = context.root.findByName('pickables');
             this.client = context.root.getChildren()[0].script.client;
+            this.teams = context.root.getChildren()[0].script.teams;
             
             this.level = [
                 [ 13.5, 2, 1, 4 ],
@@ -122,10 +151,23 @@ pc.script.create('minimap', function (context) {
                 if (fs) {
                     fs.script.setSize(34 * this.size - 22);
                 }
+                
+                this.ctx.font = Math.floor(12 + (10 * (this.size / 3))) + 'px Arial';
+            }
+        },
+        
+        state: function(state) {
+            if (state) {
+                this.canvas.classList.add('active');
+            } else {
+                this.canvas.classList.remove('active');
             }
         },
         
         draw: function() {
+            if (! this.canvas.classList.contains('active'))
+                return;
+                
             this.resize();
 
             var ctx = this.ctx;
@@ -148,18 +190,38 @@ pc.script.create('minimap', function (context) {
             // ctx.strokeStyle = '#313234';
             // ctx.stroke();
             
-            // radar circles
-            i = this.circles.length;
-            while(i--) {
-                if (Date.now() - this.circles[i].time > this.circleLife) {
-                    this.circles.splice(i, 1);
-                } else {
-                    size = ((this.circleLife - (Date.now() - this.circles[i].time)) / this.circleLife);
-                    ctx.beginPath();
-                    ctx.arc(this.circles[i].x, this.circles[i].z, Math.max(1, (1.0 - size) * 8 * this.size), 0, Math.PI * 2, false);
-                    ctx.strokeStyle = 'rgba(46, 204, 113, ' + Math.min(1.0, size * 2) + ')';
-                    ctx.stroke();
-                }
+            
+            // // radar circles
+            // i = this.circles.length;
+            // while(i--) {
+            //     if (Date.now() - this.circles[i].time > this.circleLife) {
+            //         this.circles.splice(i, 1);
+            //     } else {
+            //         size = ((this.circleLife - (Date.now() - this.circles[i].time)) / this.circleLife);
+            //         ctx.beginPath();
+            //         ctx.arc(this.circles[i].x, this.circles[i].z, Math.max(1, (1.0 - size) * 8 * this.size), 0, Math.PI * 2, false);
+            //         ctx.strokeStyle = 'rgba(46, 204, 113, ' + Math.min(1.0, size * 2) + ')';
+            //         ctx.stroke();
+            //     }
+            // }
+
+            
+            // score
+            for(i = 0; i < 4; i++) {
+                var x = (i % 2 * 35 + 6.5) / 48 * this.canvas.width;
+                var y = (Math.floor(i / 2) * 35 + 6.5) / 48 * this.canvas.height;
+                ctx.save();
+                ctx.beginPath();
+                ctx.translate(x, y);
+                ctx.rotate(-Math.PI / 4);
+                ctx.fillStyle = 'rgb(' + this.teams.colors[i].join(',') + ')';
+                // ctx.strokeStyle = '#000';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                // ctx.lineWidth = 2;
+                // ctx.strokeText(this.teams.scores[i], 0, 0);
+                ctx.fillText(this.teams.scores[i], 0, 0);
+                ctx.restore();
             }
             
             // bullets
@@ -188,7 +250,7 @@ pc.script.create('minimap', function (context) {
             for(i = 0; i < this.level.length; i++) {
                 ctx.rect((this.level[i][0] - this.level[i][2] / 2) * cellSize, (this.level[i][1] - this.level[i][3] / 2) * cellSize, this.level[i][2] * cellSize, this.level[i][3] * cellSize);
             }
-            ctx.fillStyle = '#2ecc71';
+            ctx.fillStyle = '#5e7578';
             ctx.fill();
 
             // pickables
@@ -217,15 +279,15 @@ pc.script.create('minimap', function (context) {
                 pos[0] = pos[0] / 48 * this.canvas.width;
                 pos[1] = pos[1] / 48 * this.canvas.width;
                 
-                // circle
-                if (tanks[i].script.tank.own && Date.now() - this.lastCircle > 1300) {
-                    this.lastCircle = Date.now();
-                    this.circles.push({
-                        time: Date.now(),
-                        x: pos[0],
-                        z: pos[1]
-                    });
-                }
+                // // circle
+                // if (tanks[i].script.tank.own && Date.now() - this.lastCircle > 1300) {
+                //     this.lastCircle = Date.now();
+                //     this.circles.push({
+                //         time: Date.now(),
+                //         x: pos[0],
+                //         z: pos[1]
+                //     });
+                // }
                 
                 // dont render if flashit
                 if (! tanks[i].script.tank.flashState)
@@ -237,8 +299,12 @@ pc.script.create('minimap', function (context) {
                 ctx.translate(pos[0], pos[1]);
                 ctx.rotate(-Math.atan2(tanks[i].forward.x, tanks[i].forward.z));
                 ctx.rect(-2.5 * size, -4 * size, 5 * size, 8 * size);
-                clr = tanks[i].script.tank.matBase.emissive;
-                ctx.fillStyle = '#' + ('00' + Math.floor(clr.r * 255).toString(16)).slice(-2) + ('00' + Math.floor(clr.g * 255).toString(16)).slice(-2) + ('00' + Math.floor(clr.b * 255).toString(16)).slice(-2);
+                if(tanks[i].script.tank.own) {
+                    ctx.fillStyle = '#fff';
+                } else {
+                    clr = tanks[i].script.tank.matBase.emissive;
+                    ctx.fillStyle = '#' + ('00' + Math.floor(clr.r * 255).toString(16)).slice(-2) + ('00' + Math.floor(clr.g * 255).toString(16)).slice(-2) + ('00' + Math.floor(clr.b * 255).toString(16)).slice(-2);
+                }
                 ctx.fill();
                 ctx.restore();
             }

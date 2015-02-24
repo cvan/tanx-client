@@ -49,6 +49,7 @@ var slerp = function (lhs, rhs, alpha) {
 pc.script.create('tank', function (context) {
     var matBase = null;
     var matTracks = null;
+    var matGlow = null;
     // var matBullet = null;
     
     var Tank = function (entity) {
@@ -60,14 +61,15 @@ pc.script.create('tank', function (context) {
         this.targetPoint = new pc.Quat();
         
         this.matBase = null;
-        // this.matBullet = null;
-        // this.matTracks = null;
         this.head = null;
         this.hpBar = null;
         
         this.hp = 0;
+        this.sp = 0;
         
         this.ind = 0;
+
+        this._hidden = false;
     };
 
     Tank.prototype = {
@@ -75,42 +77,30 @@ pc.script.create('tank', function (context) {
             // find head
             this.head = this.entity.findByName('head');
             
+            // find shiela model
+            this.auraShield = this.entity.findByName('shield');
+
             // find hpBar
             this.hpBar = this.head.findByName('hp');
             this.hpBarLeft = this.hpBar.findByName('left');
             this.hpBarRight = this.hpBar.findByName('right');
             
-            // find light
-            // this.light = this.entity.findByName('light');
-            
             // clone material
-            if (matBase == null) {
+            if (matBase === null) {
                 matBase = context.assets.find('tank').resource;
                 matTracks = context.assets.find('tracks').resource;
-                matBullet = context.assets.find('bullet').resource;
+                matGlow = context.assets.find('tank-glow').resource;
             }
             
             // console.log(asset);
             this.matBase = matBase.clone();
             this.matTracks = matTracks.clone();
-            // this.matBullet = matBullet.clone();
+            this.matGlow = matGlow.clone();
             
             this.tracksOffset = 0;
             
-            var color = [ 1, .3, 0 ];
-            
-            // set white color for material
-            this.matBase.emissive.set(color[0], color[1], color[2], 1);
-            this.matBase.update();
-            
-            this.matTracks.emissive.set(color[0], color[1], color[2], 1);
-            this.matTracks.update();
-            
-            // this.matBullet.emissive.set(color[0], color[1], color[2], 1);
-            // this.matBullet.update();
-            
             this.blinkParts = this.entity.findByLabel('sub-part');
-            
+
             // put new material on each sub-part
             this.blinkParts.forEach(function(entity) {
                 var meshes = entity.model.model.meshInstances;
@@ -125,8 +115,12 @@ pc.script.create('tank', function (context) {
             
             // add shadow to blinkParts
             this.blinkParts.push(this.entity.findByName('shadow'));
-            // add glow to blinkParts
-            this.blinkParts.push(this.entity.findByName('glow'));
+            this.blinkParts.push(this.hpBar);
+            this.blinkParts.push(this.auraShield);
+            // glow
+            var glow = this.entity.findByName('glow');
+            glow.model.material = this.matGlow;
+            this.blinkParts.push(glow);
 
             this.entity.fire('ready');
             
@@ -138,18 +132,20 @@ pc.script.create('tank', function (context) {
             this.flashState = false;
             
             if (context.root.getChildren()[0].script.client.id === this.entity.owner) {
-                // this.light.destroy();
-                // this.light = null;
-            // } else {
                 this.own = true;
-                // this.light.enabled = true;
-                // this.light.light.color.set(color[0], color[1], color[2], 1);
-                // this.light.light.refreshProperties();
-                
                 this.uiHP = context.root.getChildren()[0].script.hp;
+                this.overlay = context.root.getChildren()[0].script.overlay;
+                this.minimap = context.root.getChildren()[0].script.minimap;
             }
+            this.teams = context.root.getChildren()[0].script.teams;
             
             this.explodeSound = context.root.findByName('explode_sound');
+            
+            var self = this;
+            this.entity.on('culled', function(state) {
+                if (! self.dead)
+                    self.hidden(state);
+            });
         },
 
         update: function (dt) {
@@ -157,25 +153,22 @@ pc.script.create('tank', function (context) {
                 // respawned
                 this.deadBefore = false;
                 this.respawned = Date.now();
-                // show hp
-                this.hpBar.enabled = true;
+                // show stuff
+                this.hidden(false);
                 // killer
-                if (this.own)
-                    this.uiHP.killedBy(null);
+                if (this.own) {
+                    this.overlay.killer(false);
+                    this.overlay.cinematic(false);
+                    this.overlay.overlay(false);
+                    this.minimap.state(true);
+                }
                 
             } else if (this.dead && ! this.deadBefore) {
                 // died
                 this.deadBefore = true;
                 // hide
-                //      hp bar
-                this.hpBar.enabled = false;
-                // //      light
-                // if (this.light)
-                //     this.light.enabled = false;
-                //      parts
-                for(var i = 0; i < this.blinkParts.length; i++) {
-                    this.blinkParts[i].model.enabled = state;
-                }
+                this.hidden(true);
+                
                 if (this.own) {
                     // hp ui
                     this.uiHP.set(0);
@@ -183,8 +176,13 @@ pc.script.create('tank', function (context) {
                     if (window.navigator.vibrate)
                         window.navigator.vibrate(100 + Math.floor(Math.random() * 100));
 
-                    if (this.killer)
-                        this.uiHP.killedBy(this.killer.name);
+                    // killer
+                    this.overlay.killer(this.killer && this.killer.name || false, this.teams.names[this.killer && this.killer.script.tank.team]);
+                    // cinematic
+                    this.overlay.cinematic(true);
+                    this.overlay.overlay(.2);
+                    this.overlay.timer(5);
+                    this.minimap.state(false);
                 }
                 // sound
                 var sound = this.explodeSound.clone();
@@ -216,50 +214,36 @@ pc.script.create('tank', function (context) {
             tmpVec.lerp(this.entity.getPosition(), this.movePoint, 0.1);
             this.entity.setPosition(tmpVec);
             
-            // this.matTracks
-            // if (len > 0.05) {
-            //     this.tracksOffset = (this.tracksOffset + Math.min(1, len)) % 4;
-            //     // emissive
-            //     this.matTracks.emissiveMapOffset.set(0, this.tracksOffset / 4);
-            //     this.matTracks.emissiveMapOffset[0] = this.matTracks.emissiveMapOffset.x;
-            //     this.matTracks.emissiveMapOffset[1] = this.matTracks.emissiveMapOffset.y;
-            //     this.matTracks.setParameter('material_emissiveMapOffset', this.matTracks.emissiveMapOffset);
-            //     // gloss
-            //     this.matTracks.glossMapOffset.set(0, this.tracksOffset / 4);
-            //     this.matTracks.glossMapOffset[0] = this.matTracks.glossMapOffset.x;
-            //     this.matTracks.glossMapOffset[1] = this.matTracks.glossMapOffset.y;
-            //     this.matTracks.setParameter('material_glossMapOffset', this.matTracks.glossMapOffset);
-            // }
-            
             // targeting
             slerp.call(tmpQuat, this.head.getRotation(), this.targetPoint, 0.3);
             this.head.setRotation(tmpQuat);
-            
-            // hp bar
-            this.hpBar.setRotation(0, 0, 0, 1);
-            this.hpBar.rotate(0, 45, 0);
             
             if (Date.now() - this.respawned < 1000) {
                 var state = (Math.floor((Date.now() - this.respawned) / 100) % 2) == 1;
                 if (this.flashState !== state) {
                     this.flashState = state;
-                    // // light
-                    // if (this.light)
-                    //     this.light.enabled = state;
                     // parts
-                    for(var i = 0; i < this.blinkParts.length; i++) {
-                        this.blinkParts[i].model.enabled = state;
-                    }
+                    this.hidden(! state);
                 }
             } else if (! this.flashState) {
                 this.flashState = true;
-                // // light
-                // if (this.light)
-                //     this.light.enabled = true;
                 // parts
-                for(var i = 0; i < this.blinkParts.length; i++) {
-                    this.blinkParts[i].model.enabled = true;
+                this.hidden(false);
+            }
+            
+            if (! this._hidden) {
+                // shield
+                if (this.sp) {
+                    this.auraShield.enabled = true;
+                    this.auraShield.setRotation(0, 0, 0, 1);
+                    this.auraShield.rotate(0, 45, 0);
+                } else {
+                    this.auraShield.enabled = false;
                 }
+            
+                // hp bar
+                this.hpBar.setRotation(0, 0, 0, 1);
+                this.hpBar.rotate(0, 45, 0);
             }
         },
         
@@ -297,6 +281,19 @@ pc.script.create('tank', function (context) {
             this.movePoint.set(pos[0], 0, pos[1]);
             if (this.dead)
                 this.entity.setPosition(this.movePoint);
+        },
+        
+        hidden: function(state) {
+            state = state || ! this.entity.script || this.entity.script.cullingItem.culled;
+            
+            if (this._hidden === state)
+                return;
+                
+            this._hidden = state;
+            
+            for(var i = 0; i < this.blinkParts.length; i++) {
+                this.blinkParts[i].enabled = ! this._hidden;
+            }
         }
     };
 

@@ -14,6 +14,8 @@ pc.script.create('tanks', function (context) {
             this.client = context.root.getChildren()[0].script.client;
             this.camera = context.root.findByName('camera');
             this.minimap = context.root.getChildren()[0].script.minimap;
+            this.teams = context.root.getChildren()[0].script.teams;
+            this.hpBar = context.root.getChildren()[0].script.hp;
             
             this.explodeSound = context.root.findByName('explode_sound');
         },
@@ -26,21 +28,12 @@ pc.script.create('tanks', function (context) {
             newTank.setPosition(args.pos[0], 0, args.pos[1]);
             newTank.rotate(0, Math.random() * 360, 0);
             
-            if (args.owner == this.client.id) {
+            this.teams.tankAdd(newTank.script.tank, args.team);
+            
+            if (args.owner == this.client.id)
                 this.camera.script.link.link = newTank;
-            }
             
             this.tanks.addChild(newTank);
-            
-            var self = this;
-            newTank.on('ready', function() {
-                this.setColor(args.color);
-                this.angle(args.angle);
-
-                // if (self.client.id == args.owner) {
-                //     this.script.tank.light.enabled = true;
-                // }
-            });
         },
         
         delete: function(args) {
@@ -70,6 +63,9 @@ pc.script.create('tanks', function (context) {
                 if (tankData.hasOwnProperty('hp'))
                     tank.setHP(tankData.hp);
                 
+                // shield
+                tank.sp = tankData.sp || 0;
+                
                 // dead/alive
                 tank.dead = tankData.dead || false;
 
@@ -78,6 +74,10 @@ pc.script.create('tanks', function (context) {
                     // find killer
                     tank.killer = this.tanks.findByName('tank_' + tankData.killer);
                 }
+                
+                // score
+                if (tank.own && tankData.hasOwnProperty('s'))
+                    this.hpBar.setScore(tankData.s);
             }
             
             this.minimap.draw();

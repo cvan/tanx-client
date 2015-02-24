@@ -5,6 +5,8 @@ pc.script.create('client', function (context) {
         this.id = null;
         this.movement = [ 0, 0 ];
         context.keyboard = new pc.input.Keyboard(document.body);
+        
+        document.body.style.cursor = 'none';
     };
 
     Client.prototype = {
@@ -12,6 +14,8 @@ pc.script.create('client', function (context) {
             this.tanks = context.root.getChildren()[0].script.tanks;
             this.bullets = context.root.getChildren()[0].script.bullets;
             this.pickables = context.root.getChildren()[0].script.pickables;
+            this.teams = context.root.getChildren()[0].script.teams;
+            this.minimap = context.root.getChildren()[0].script.minimap;
             
             var self = this;
             var socket = this.socket = new Socket({ url: 'http://localhost:30043/socket' });
@@ -40,6 +44,8 @@ pc.script.create('client', function (context) {
             socket.on('init', function(data) {
                 self.id = data.id;
                 self.connected = true;
+                
+                self.minimap.state(true);
             });
             
             socket.on('tank.new', function(data) {
@@ -49,7 +55,7 @@ pc.script.create('client', function (context) {
             socket.on('tank.delete', function(data) {
                 self.tanks.delete(data);
             });
-
+            
             socket.on('update', function(data) {
                 // bullets add
                 if (data.bullets) {
@@ -75,7 +81,6 @@ pc.script.create('client', function (context) {
                         self.pickables.delete(data.pickableDelete[i]);
                 }
                 
-
                 // tanks update
                 if (data.tanks)
                     self.tanks.updateData(data.tanks);
@@ -84,6 +89,19 @@ pc.script.create('client', function (context) {
                 if (data.tanksRespawn) {
                     for(var i = 0; i < data.tanksRespawn.length; i++)
                         self.tanks.respawn(data.tanksRespawn[i]);
+                }
+                
+                // teams score
+                if (data.teams) {
+                    for(var i = 0; i < data.teams.length; i++) {
+                        self.teams.teamScore(i, data.teams[i]);
+                    }
+                }
+                
+                // winner
+                if (data.winner) {
+                    self.shoot(false);
+                    self.teams.teamWin(data.winner);
                 }
             });
 
@@ -96,12 +114,15 @@ pc.script.create('client', function (context) {
         update: function (dt) {
             if (! this.connected)
                 return;
-
+                
             // collect keyboard input
             var movement = [
                 context.keyboard.isPressed(pc.input.KEY_D) - context.keyboard.isPressed(pc.input.KEY_A),
                 context.keyboard.isPressed(pc.input.KEY_S) - context.keyboard.isPressed(pc.input.KEY_W)
             ];
+            
+            movement[0] += context.keyboard.isPressed(pc.input.KEY_RIGHT) - context.keyboard.isPressed(pc.input.KEY_LEFT);
+            movement[1] += context.keyboard.isPressed(pc.input.KEY_DOWN) - context.keyboard.isPressed(pc.input.KEY_UP);
             
             // gamepad controls
             // AUTHOR: Potch

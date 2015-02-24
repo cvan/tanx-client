@@ -1,41 +1,55 @@
 pc.script.create('hp', function (context) {
     var Hp = function (entity) {
+        var css = [
+            "#hpBar {",
+            "   position: absolute;",
+            "   top: 16px;",
+            "   left: 35%;",
+            "   width: 30%;",
+            "   height: 6px;",
+            "   background-color: rgba(164, 164, 164, .7);",
+            "}",
+            "#hpBar > .bar {",
+            "   width: 100%;",
+            "   height: 6px;",
+            "   background-color: #2ecc71;",
+            "   -webkit-transition: 200ms;",
+            "   -moz-transition: 200ms;",
+            "   -ms-transition: 200ms;",
+            "   transition: 200ms;",
+            "}",
+            "#score {",
+            "   position: absolute;",
+            "   top: 22px;",
+            "   left: calc(50% - 16px);",
+            "   width: 32px;",
+            "   height: 32px;",
+            "   line-height: 32px;",
+            "   background-color: rgb(33, 34, 36);",
+            "   text-align: center;",
+            "   font-size: 24px;",
+            "   color: #fff;",
+            "}",
+        ].join('\n');
+        
+        var style = document.createElement('style');
+        style.innerHTML = css;
+        document.querySelector('head').appendChild(style);
+        
+        
         var div = document.createElement('div');
-        div.style.id = 'hpBar';
-        div.style.position = 'absolute';
-        div.style.top = '16px';
-        div.style.left = '50%';
-        div.style.width = '30%';
-        div.style.height = '6px';
-        div.style.marginLeft = '-15%';
-        div.style.backgroundColor = 'rgba(164, 164, 164, .7)';
+        div.id = 'hpBar';
         document.body.appendChild(div);
         
         var hp = this.hp = document.createElement('div');
-        hp.style.height = '6px';
-        hp.style.backgroundColor = '#2ecc71';
-        hp.style.width = '100%';
-        hp.style.webkitTransition = 'width 200ms';
-        hp.style.mozTransition = 'width 200ms';
-        hp.style.msTransition = 'width 200ms';
-        hp.style.transition = 'width 200ms';
+        hp.classList.add('bar');
         div.appendChild(hp);
         
-        var killer = this.killer = document.createElement('div');
-        killer.style.textAlign = 'center';
-        killer.style.position = 'absolute';
-        killer.style.width = '320px';
-        killer.style.bottom = '64px';
-        killer.style.left = '50%';
-        killer.style.fontSize = '36px';
-        killer.style.lineHeight = '42px';
-        killer.style.marginLeft = '-160px';
-        killer.style.zIndex = 1;
-        killer.style.display = 'none';
-        killer.style.color = '#2ecc71';
-        killer.textContent = 'Killed by hello_world';
-        document.body.appendChild(killer);
-
+        var score = this.score = document.createElement('div');
+        score.id = 'score';
+        score.textContent = '0';
+        document.body.appendChild(score);
+        
         this.points = 0;
     };
 
@@ -47,13 +61,8 @@ pc.script.create('hp', function (context) {
             }
         },
         
-        killedBy: function(name) {
-            if (name) {
-                this.killer.style.display = 'block';
-                this.killer.textContent = 'Killed by ' + name;
-            } else {
-                this.killer.style.display = 'none';
-            }
+        setScore: function(score) {
+            this.score.textContent = score;
         }
     };
 

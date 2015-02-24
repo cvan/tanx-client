@@ -8,7 +8,10 @@
         <link rel="stylesheet" href="gamepad-host.css" media="all">
     </head>
     <body>
-        <canvas id="t"></canvas>
+        <div class="pad-container">
+          <canvas class="pad pad--move" id="pad1"></canvas>
+          <canvas class="pad pad--aim" id="pad2"></canvas>
+        </div>
         <script src="sock.js"></script>
         <script src="gamepad-host.js"></script>
     </body>

@@ -160,7 +160,6 @@ pc.script.create('touch', function (context) {
                             this.client.socket.send('move', [ this.vec.x, this.vec.y ]);
                         }
                     }
-                    
                 }.bind(this));
                 
                 this.forEach('end', function(touch) {

@@ -19,7 +19,7 @@ pc.script.create('infoBox', function (context) {
         i.style.position = 'absolute';
         i.style.fontSize = '24px';
         i.style.fontFamily = 'Helvetica, sans-serif';
-        i.style.color = '#2ecc71';
+        i.style.color = '#5e7578';
         i.style.top = '0px';
         i.style.right = '0px';
         i.style.width = '0px';
@@ -52,9 +52,9 @@ pc.script.create('infoBox', function (context) {
         modal.innerHTML += '<p>made during 12 hours hackathon using <a href="https://playcanvas.com/" target="_blank">PlayCanvas</a> and node.js.</p>';
         modal.innerHTML += '<p>Use WASD &amp; Mouse to control tank or Touch Joystics on mobile platforms.</p>';
         modal.innerHTML += '<p>The game features use of HTML5, WebGL, WebSockets, Canvas, Touch.</p>';
-        modal.innerHTML += '<br /><p>design: <a href="https://twitter.com/4Roonio" target="_blank">Roonio</a></p>';
-        modal.innerHTML += '<p>code: <a href="https://twitter.com/mrmaxm" target="_blank">moka</a></p>';
-        
+        modal.innerHTML += '<br /><p>code: <a href="https://twitter.com/mrmaxm" target="_blank">moka</a></p>';
+        modal.innerHTML += '<br /><p>media: SashaRX</p>';
+        modal.innerHTML += '<br /><p>ui: <a href="https://twitter.com/4Roonio" target="_blank">Roonio</a></p>';
         
         document.body.appendChild(modal);
         

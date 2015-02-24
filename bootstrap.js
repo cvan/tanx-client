@@ -346,9 +346,8 @@ pc.extend(pc, function () {
                     // if this is a playcanvas script
                     // then create a URL that will open the code editor
                     // at that line and column
-                    if (parts[1] == 'api' && parts[2] == 'code') {
-                        target = pc.string.format("/{0}/{1}/editor/{2}",
-                            parts[3],
+                    if (filename.indexOf("api/files/code") >= 0) {
+                        target = pc.string.format("/editor/code/{0}/{1}",
                             parts[4],
                             parts.slice(9).join('/')
                         );

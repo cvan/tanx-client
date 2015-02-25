@@ -30,11 +30,8 @@ pc.script.create('gamepad', function (context) {
                 self.aim = data.aim;
             }
 
-            this.client.socket.on('tank.new', function (data) {
-                if (!data.self) {
-                    return;
-                }
-                this.color = this.teams.colors[data.team];
+            this.client.socket.on('tank.team', function (data) {
+                this.color = this.teams.colors[data];
                 this.client.socket.send('gamepad.color', {
                     player: player,
                     color: this.color

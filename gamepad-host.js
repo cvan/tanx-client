@@ -139,7 +139,6 @@
 
         function handle(e) {
             e.preventDefault();
-            setupScreen();
             var x, y;
             if (e.targetTouches) {
                 for (var i = 0; i < e.targetTouches.length; i++) {

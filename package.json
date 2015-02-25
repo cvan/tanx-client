@@ -1,0 +1,11 @@
+{
+  "name": "tanx-client",
+  "version": "0.0.1",
+  "description": "tanx game front-end code",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/cvan/tanx-client.git"
+  }
+}

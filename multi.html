@@ -7,7 +7,7 @@
     <style>
       iframe {
         border: 0;
-        height: 100vh;
+        height: 50vh;
         position: absolute;
         width: 50vw;
       }
@@ -30,9 +30,26 @@
     </style>
   </head>
   <body>
-    <iframe class="p1" src="/index.html?player=1"></iframe>
-    <iframe class="p2" src="/index.html?player=2"></iframe>
-    <!-- <iframe class="p3" src="/index.html?player=3"></iframe>
-    <iframe class="p4" src="/index.html?player=4"></iframe> -->
+    <iframe class="p1" src="/index.html?player=1&amp;ws_url=http://localhost:30043/socket"></iframe>
+    <iframe class="p2" src="/index.html?player=2&amp;ws_url=http://localhost:30043/socket"></iframe>
+    <iframe class="p3" src="/index.html?player=3&amp;ws_url=http://localhost:30043/socket"></iframe>
+    <iframe class="p4" src="/index.html?player=4&amp;ws_url=http://localhost:30043/socket"></iframe>
+    <script>
+      (function () {
+        if (!('origin' in window.location)) {
+          window.location.origin = window.location.protocol + '//' + window.location.host;
+        }
+
+        var qsToAppend = '&ws_url=' + window.location.origin + '/socket';
+
+        var iframes = document.querySelectorAll('iframe');
+        for (var i = 0; i < iframes.length; i++) {
+          var iframe = iframes[i];
+          if (iframe.src.indexOf('&ws_url=') === -1) {
+            iframe.setAttribute('src', iframe.src + qsToAppend);
+          }
+        }
+      })();
+    </script>
   </body>
 </html>

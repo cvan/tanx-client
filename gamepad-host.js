@@ -1,5 +1,11 @@
 ;(function () {
 
+    var vibrate = function (duration) {
+        if ('vibrate' in navigator) {
+            navigator.vibrate(duration);
+        }
+    };
+
     var socketUrl = '';
     var player = '';
 
@@ -84,9 +90,17 @@
     sock.onmessage = function (e) {
         console.log('WS message:', e.data);
         var data = JSON.parse(e.data);
-        var handler = listeners[data.n];
-        if (handler) {
-            handler.call(this, data.d);
+        var handler;
+        if (data.n === 'gamepad') {
+            handler = listeners['gamepad.' + data.d.type];
+            if (handler) {
+                handler(data.d.data);
+            }
+        } else {
+            handler = listeners[data.n];
+            if (handler) {
+                handler(data.d);
+            }
         }
     };
 
@@ -94,25 +108,39 @@
         sock.sendMessage('register.gamepad', player);
         setupPeerConnection(function (peer) {
             peer.on('data', function (data) {
-                if (data.type === 'gamepad.color') {
-                    color = data.data;
-                    moveStick.redraw();
-                    aimStick.redraw();
+                console.log('peer.data', data);
+                var handler = listeners[data.type];
+                if (handler) {
+                    handler(data.data);
                 }
             });
         });
     });
 
-    on('gamepad.color', function (data) {
-        color = data;
+    on('gamepad.color', gamepadColor);
+    on('gamepad.hit', gamepadHit);
+    on('gamepad.dead', gamepadDead);
+
+    function gamepadColor(data) {
+        console.log('gamepad.color', data.color);
+        color = data.color;
         moveStick.redraw();
         aimStick.redraw();
-    });
+    }
+
+    function gamepadHit(data) {
+        console.log('gamepad.hit', data.hp);
+        vibrate(10 * (50 - (data.hp * 5)));
+    }
+
+    function gamepadDead(data) {
+        console.log('gamepad.dead');
+        vibrate(1000);
+    }
 
     sock.onclose = function() {
         console.log('WS close');
     };
-
 
     window.addEventListener('beforeunload', function () {
         console.log('Closed connection to WS server');
@@ -343,6 +371,9 @@
         on('rtc.signal', function (data) {
             peer.signal(data);
         });
+
+        // todo: don't throw TypeErrors if no rtc.
+
     }
 
 })();

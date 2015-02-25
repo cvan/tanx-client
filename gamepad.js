@@ -17,6 +17,7 @@ pc.script.create('gamepad', function (context) {
         initialize: function () {
             this.client = context.root.getChildren()[0].script.client;
             this.link = context.root.findByName('camera').script.link;
+            this.tanks = context.root.findByName('tanks');
             this.teams = context.root.getChildren()[0].script.teams;
 
             var self = this;
@@ -30,13 +31,49 @@ pc.script.create('gamepad', function (context) {
                 self.aim = data.aim;
             }
 
+            // If the gamepad is connected after game is already started.
+            this.client.socket.on('gamepad.found', function (data) {
+                console.log('Gamepad found, sending color…', self.color);
+                self.send('color', {
+                    color: self.color
+                });
+            });
+
             this.client.socket.on('tank.team', function (data) {
                 this.color = this.teams.colors[data];
-                this.client.socket.send('gamepad.color', {
-                    player: player,
-                    color: this.color
+
+                self.send('color', {
+                    color: self.color
                 });
             }.bind(this));
+
+            var lastHp = 0;
+            var dead = false;
+            this.client.socket.on('update', function (data) {
+                if (data.tanks) {
+                    data.tanks.forEach(function (tank) {
+                        var localTank = self.tanks.findByName('tank_' + tank.id);
+                        if (! localTank) return;
+                        localTank = localTank.script.tank;
+
+                        if (localTank.own) {
+                            if (lastHp > tank.hp) {
+                                console.log('hp', tank.hp);
+                                self.send('hit', {
+                                    hp: tank.hp
+                                });
+                            }
+                            lastHp = tank.hp;
+
+                            if (!dead && localTank.dead) {
+                                console.log('dead');
+                                self.send('dead');
+                            }
+                            dead = localTank.dead;
+                        }
+                    });
+                }
+            });
 
             this.client.socket.on('gamepad', function (data) {
                 if (player === data.player) {
@@ -46,10 +83,11 @@ pc.script.create('gamepad', function (context) {
             }.bind(this));
 
             this.client.socket.on('connect', function () {
+                this.client.socket.send('register.gamepad', player);
+
                 this.setupPeerConnection(function (peer) {
-                    peer.send({
-                        type: 'gamepad.color',
-                        data: self.color
+                    self.send('color', {
+                        color: self.color
                     });
                     peer.on('data', function (data) {
                         console.log('Received WebRTC gamepad message');
@@ -59,6 +97,18 @@ pc.script.create('gamepad', function (context) {
                     });
                 });
             }.bind(this));
+        },
+
+        send: function (type, data) {
+            var msg = {
+                type: type,
+                data: data
+            };
+            if (this.peer) {
+                this.peer.send(msg);
+            } else {
+                this.client.socket.send('gamepad', msg);
+            }
         },
 
         setupPeerConnection: function (cb) {
@@ -78,7 +128,6 @@ pc.script.create('gamepad', function (context) {
                 peer = new SimplePeer({
                     initiator: !!data.initiator,
                 });
-                this.peer = peer;
 
                 peer.on('error', function (err) {
                     console.error('peer error', err.stack || err.message || err);
@@ -86,6 +135,7 @@ pc.script.create('gamepad', function (context) {
 
                 peer.on('connect', function () {
                     console.log('peer connected!');
+                    this.peer = peer;
                     cb(peer);
                 });
 
@@ -98,7 +148,7 @@ pc.script.create('gamepad', function (context) {
                     socket.send('rtc.close', {
                         player: player
                     });
-                    peer = null;
+                    this.peer = peer = null;
                 });
 
             }.bind(this));

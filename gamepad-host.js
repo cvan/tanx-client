@@ -62,7 +62,15 @@
 
     on('init', function (data) {
         sock.sendMessage('register.gamepad', player);
-        setupPeerConnection();
+        setupPeerConnection(function (peer) {
+            peer.on('data', function (data) {
+                if (data.type === 'gamepad.color') {
+                    color = data.data;
+                    moveStick.redraw();
+                    aimStick.redraw();
+                }
+            });
+        });
     });
 
     on('gamepad.color', function (data) {
@@ -277,16 +285,18 @@
             data = data || {};
 
             peer = new SimplePeer({
-                initiator: !!data.initiator,
+                initiator: !!data.initiator
             });
 
             peer.on('error', function (err) {
-                console.error('peer error', err.stack || err.message || err);
+                console.error('Peer error:', err.stack || err.message || err);
             });
 
             peer.on('connect', function () {
-                console.log('peer connected!');
-                cb(peer);
+                console.log('Peer connected!');
+                if (cb) {
+                    cb(peer);
+                }
             });
 
             peer.on('signal', function (data) {

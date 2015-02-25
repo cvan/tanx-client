@@ -46,18 +46,30 @@
         console.log('WS connected');
     };
 
-    sock.onmessage = function(e) {
+    var listeners = {};
+    var on = function (type, handler) {
+        listeners[type] = handler;
+    };
+
+    sock.onmessage = function (e) {
         console.log('WS message:', e.data);
         var data = JSON.parse(e.data);
-        if (data.n === 'init') {
-            sock.sendMessage('register.gamepad', player);
-        }
-        if (data.n === 'gamepad.color') {
-            color = data.d;
-            moveStick.redraw();
-            aimStick.redraw();
+        var handler = listeners[data.n];
+        if (handler) {
+            handler.call(this, data.d);
         }
     };
+
+    on('init', function (data) {
+        sock.sendMessage('register.gamepad', player);
+        setupPeerConnection();
+    });
+
+    on('gamepad.color', function (data) {
+        color = data;
+        moveStick.redraw();
+        aimStick.redraw();
+    });
 
     sock.onclose = function() {
         console.log('WS close');
@@ -141,8 +153,8 @@
                 return;
             }
             if (dx * dx > 10 || dy * dy > 10) {
-                dx = (dx * .7) | 0;
-                dy = (dy * .7) | 0;
+                dx = (dx * 0.7) | 0;
+                dy = (dy * 0.7) | 0;
                 setTimeout(terp, 20);
             } else {
                 dx = 0;
@@ -172,14 +184,16 @@
             var h = Math.sqrt(dy * dy + dx * dx);
             var a = Math.atan2(dy ,dx);
 
+            var x, y;
+
             var l = Math.min(h, size);
 
             ctx.clearRect(-cx, -cy, el.width, el.height);
             for (var i = 0; i <= n; i++) {
                 var rad = (1.2 - i / n) * size;
                 var r2 = i / n * l;
-                var x = -Math.cos(a) * r2;
-                var y = -Math.sin(a) * r2;
+                x = -Math.cos(a) * r2;
+                y = -Math.sin(a) * r2;
                 ctx.beginPath();
                 ctx.save();
                 ctx.translate(x, y);
@@ -193,8 +207,8 @@
                 ctx.restore();
             }
 
-            var x = l * Math.cos(a) / size;
-            var y = l * Math.sin(a) / size;
+            x = l * Math.cos(a) / size;
+            y = l * Math.sin(a) / size;
 
             if ('onchange' in self) {
                 self.onchange(x, y);
@@ -225,7 +239,14 @@
     };
 
     function sendUpdate() {
-        sendData('gamepad', state);
+        if (peer) {
+            peer.send({
+                type: 'gamepad',
+                data: state
+            });
+        } else {
+            sendData('gamepad', state);
+        }
     }
 
     function launchIntoFullscreen(element) {
@@ -242,6 +263,45 @@
 
     function setupScreen() {
         launchIntoFullscreen(document.body);
+    }
+
+    var peer;
+
+    function setupPeerConnection(cb) {
+
+        sendData('rtc.peer', {
+            player: player
+        });
+
+        on('rtc.peer', function (data) {
+            data = data || {};
+
+            peer = new SimplePeer({
+                initiator: !!data.initiator,
+            });
+
+            peer.on('error', function (err) {
+                console.error('peer error', err.stack || err.message || err);
+            });
+
+            peer.on('connect', function () {
+                console.log('peer connected!');
+                cb(peer);
+            });
+
+            peer.on('signal', function (data) {
+                sendData('rtc.signal', data);
+            });
+
+            peer.on('close', function () {
+                sendData('rtc.close');
+                peer = null;
+            });
+        });
+
+        on('rtc.signal', function (data) {
+            peer.signal(data);
+        });
     }
 
 })();

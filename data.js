@@ -7480,6 +7480,11 @@ var content = {
                 "name": "sock"
               },
               {
+                "url": "simplepeer.min.js",
+                "attributes": [],
+                "name": "peer"
+              },
+              {
                 "url": "network.js",
                 "attributes": [],
                 "name": ""

@@ -1,6 +1,8 @@
 pc.script.create('gamepad', function (context) {
-    var qs_player = /[\?&]player=([\w\-]+)/i.exec(window.location.search);
-    player = qs_player && qs_player[1];
+    // Get query-string parameters (à la `URLSearchParams`).
+    var uri = new pc.URI(window.location.href);
+    var query = uri.getQuery();
+    var player = query.player;
 
     // Creates a new Gamepad instance.
     var Gamepad = function (entity) {

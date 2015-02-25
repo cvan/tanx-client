@@ -18,8 +18,19 @@ pc.script.create('client', function (context) {
             this.minimap = context.root.getChildren()[0].script.minimap;
             
             var self = this;
-            var socket = this.socket = new Socket({ url: 'http://localhost:30043/socket' });
-            // var socket = this.socket = new Socket({ url: 'http://tanx.playcanvas.com/socket' });
+
+            // Get query-string parameters (à la `URLSearchParams`).
+            var uri = new pc.URI(window.location.href);
+            var query = uri.getQuery();
+
+            var socketUrl = 'http://tanx.playcanvas.com/socket';
+            if ('ws_url' in query) {
+                socketUrl = query.ws_url;
+            } else if (window.location.hostname === 'localhost') {
+                socketUrl = 'http://localhost:30043/socket';
+            }
+
+            var socket = this.socket = new Socket({ url: socketUrl });
             
             this.connected = false;
             

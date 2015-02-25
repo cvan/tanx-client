@@ -1,8 +1,38 @@
 ;(function () {
 
-    var qs_player = /[\?&]player=([\w\-]+)/i.exec(window.location.search);
-    var player = qs_player && qs_player[1];
+    var socketUrl = '';
+    var player = '';
 
+    // Get query-string parameters (à la `URLSearchParams`).
+    var search = window.location.search;
+    if ('URLSearchParams' in window && search) {
+        var query = new URLSearchParams(search.substr(1));
+
+        if (query.has('ws_url')) {
+            socketUrl = query.get('ws_url');
+        }
+
+        if (query.has('player')) {
+            player = query.get('player');
+        }
+    } else {
+        var qs_socket = /[\?&]ws_url=(.+)/i.exec(window.location.search);
+        socketUrl = qs_socket && qs_socket[1];
+
+        var qs_player = /[\?&]player=([\w\-]+)/i.exec(window.location.search);
+        player = qs_player && qs_player[1];
+    }
+
+    // Defaults if there was no `ws_url` passed in from the query string.
+    if (!socketUrl) {
+        if (window.location.hostname === 'localhost') {
+            socketUrl = 'http://localhost:30043/socket';
+        } else {
+            socketUrl = 'http://tanx.playcanvas.com/socket';
+        }
+    }
+
+    console.log('ws_url:', socketUrl);
     console.log('player:', player);
 
     var dirUp = document.querySelector('.direction--up');
@@ -24,7 +54,7 @@
 
     // TODO: Do not hardcode WS URL.
 
-    var sock = new SockJS('http://localhost:30043/socket');
+    var sock = new SockJS(socketUrl);
 
     sock.sendMessage = function(name, data) {
         sock.send(JSON.stringify({

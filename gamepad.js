@@ -93,7 +93,9 @@ pc.script.create('gamepad', function (context) {
                 });
 
                 peer.on('close', function () {
-                    socket.send('rtc.close');
+                    socket.send('rtc.close', {
+                        player: player
+                    });
                     peer = null;
                 });
 

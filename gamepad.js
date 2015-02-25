@@ -8,6 +8,7 @@ pc.script.create('gamepad', function (context) {
         this.move = {x: 0, y: 0};
         this.aim = {x: 0, y: 0};
         this.active = false;
+        this.peer = null;
     };
 
     Gamepad.prototype = {
@@ -16,22 +17,93 @@ pc.script.create('gamepad', function (context) {
             this.link = context.root.findByName('camera').script.link;
             this.teams = context.root.getChildren()[0].script.teams;
 
+            var self = this;
+
+            function updateControls(data) {
+                self.active = true;
+                if (self.link && self.link.mouse) {
+                    self.link.mouse.move = false;
+                }
+                self.move = data.move;
+                self.aim = data.aim;
+            }
+
             this.client.socket.on('tank.new', function (data) {
+                this.color = this.teams.colors[data.team];
                 this.client.socket.send('gamepad.color', {
                     player: player,
-                    color: this.teams.colors[data.team]
+                    color: this.color
                 });
             }.bind(this));
 
             this.client.socket.on('gamepad', function (data) {
                 if (player === data.player) {
-                    this.active = true;
-                    this.link.mouse.move = false;
-
-                    this.move = data.move;
-                    this.aim = data.aim;
+                    console.log('Received WebSocket gamepad message');
+                    updateControls(data);
                 }
             }.bind(this));
+
+            this.client.socket.on('connect', function () {
+                this.setupPeerConnection(function (peer) {
+                    peer.send({
+                        type: 'gamepad.color',
+                        data: self.color
+                    });
+                    peer.on('data', function (data) {
+                        console.log('Received WebRTC gamepad message');
+                        if (data.type === 'gamepad') {
+                            updateControls(data.data);
+                        }
+                    });
+                });
+            }.bind(this));
+        },
+
+        setupPeerConnection: function (cb) {
+            console.log('setting up peer connection');
+            var peer;
+            var socket = this.client.socket;
+
+            socket.send('rtc.peer', {
+                player: player
+            });
+
+            socket.on('rtc.peer', function (data) {
+                console.log('peer found');
+
+                data = data || {};
+
+                peer = new SimplePeer({
+                    initiator: !!data.initiator,
+                });
+                this.peer = peer;
+
+                peer.on('error', function (err) {
+                    console.error('peer error', err.stack || err.message || err);
+                });
+
+                peer.on('connect', function () {
+                    console.log('peer connected!');
+                    cb(peer);
+                });
+
+                peer.on('signal', function (data) {
+                    console.log('signal received', data);
+                    socket.send('rtc.signal', data);
+                });
+
+                peer.on('close', function () {
+                    socket.send('rtc.close', {
+                        player: player
+                    });
+                    peer = null;
+                });
+
+            }.bind(this));
+
+            socket.on('rtc.signal', function (data) {
+                peer.signal(data);
+            });
         },
 
         update: function (dt) {

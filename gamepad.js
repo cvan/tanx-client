@@ -31,9 +31,27 @@ pc.script.create('gamepad', function (context) {
                 self.aim = data.aim;
             }
 
+
+            this.client.socket.on('connect', function () {
+                this.client.socket.send('register.gamepad', player);
+            }.bind(this));
+
             // If the gamepad is connected after game is already started.
             this.client.socket.on('gamepad.found', function (data) {
                 console.log('Gamepad found, sending color…', self.color);
+
+                self.setupPeerConnection(function (peer) {
+                    self.send('color', {
+                        color: self.color
+                    });
+                    peer.on('data', function (data) {
+                        console.log('Received WebRTC gamepad message');
+                        if (data.type === 'gamepad') {
+                            updateControls(data.data);
+                        }
+                    });
+                });
+
                 self.send('color', {
                     color: self.color
                 });
@@ -80,22 +98,6 @@ pc.script.create('gamepad', function (context) {
                     console.log('Received WebSocket gamepad message');
                     updateControls(data);
                 }
-            }.bind(this));
-
-            this.client.socket.on('connect', function () {
-                this.client.socket.send('register.gamepad', player);
-
-                this.setupPeerConnection(function (peer) {
-                    self.send('color', {
-                        color: self.color
-                    });
-                    peer.on('data', function (data) {
-                        console.log('Received WebRTC gamepad message');
-                        if (data.type === 'gamepad') {
-                            updateControls(data.data);
-                        }
-                    });
-                });
             }.bind(this));
         },
 

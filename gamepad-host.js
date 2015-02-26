@@ -71,6 +71,7 @@
 
     sock.onopen = function() {
         console.log('WS open');
+        debug.innerHTML = 'WS open';
 
         sendData = function (name, data) {
             console.log('Data sent:', name, JSON.stringify(data));
@@ -80,6 +81,7 @@
 
     sock.onconnect = function() {
         console.log('WS connected');
+        debug.innerHTML = 'WS connected';
     };
 
     var listeners = {};
@@ -106,7 +108,18 @@
 
     on('init', function (data) {
         sock.sendMessage('register.gamepad', player);
+    });
+
+    on('gamepad.found', gamepadFound);
+    on('gamepad.color', gamepadColor);
+    on('gamepad.hit', gamepadHit);
+    on('gamepad.dead', gamepadDead);
+
+    function gamepadFound() {
+        console.log('gamepad.found');
+        debug.innerHTML = 'gamepad.found';
         setupPeerConnection(function (peer) {
+            debug.innerHTML = 'WebRTC connected';
             peer.on('data', function (data) {
                 console.log('peer.data', data);
                 var handler = listeners[data.type];
@@ -115,11 +128,7 @@
                 }
             });
         });
-    });
-
-    on('gamepad.color', gamepadColor);
-    on('gamepad.hit', gamepadHit);
-    on('gamepad.dead', gamepadDead);
+    }
 
     function gamepadColor(data) {
         console.log('gamepad.color', data.color);
@@ -140,6 +149,12 @@
 
     sock.onclose = function() {
         console.log('WS close');
+        // sock = new SockJS(socketUrl);
+        // sock._connect();
+        debug.innerHTML = 'WS close';
+    };
+    window.onerror = function (x, y, z) {
+        debug.innerHTML = x + ',' + y + ',' + z;
     };
 
     window.addEventListener('beforeunload', function () {

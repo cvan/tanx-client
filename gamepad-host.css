@@ -43,3 +43,11 @@ body {
 .pad--aim {
     right: 0;
 }
+
+#debug {
+    background: red;
+    color: #fff;
+    position: absolute;
+    top: 0;
+    left: 0;
+}

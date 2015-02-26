@@ -349,6 +349,14 @@
 
     function setupPeerConnection(cb) {
 
+        var pc = window.RTCPeerConnection ||
+                 window.mozRTCPeerConnection ||
+                 window.webkitRTCPeerConnection;
+
+        if (!pc) {
+            return;
+        }
+
         sendData('rtc.peer', {
             player: player
         });

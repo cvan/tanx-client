@@ -1,4 +1,9 @@
 pc.script.create('client', function (context) {
+    // If `?gamepad=2` is passed we will use `navigator.getGamepads[1]`.
+    // Otherwise, we will assume `navigator.getGamepads[0]`, if connected.
+    var uri = new pc.URI(window.location.href);
+    var query = uri.getQuery();
+    var gamepadNum = query.gamepad;
 
     var Client = function (entity) {
         this.entity = entity;
@@ -154,7 +159,9 @@ pc.script.create('client', function (context) {
             // gamepad controls
             // AUTHORS: Potch and cvan
             if (context.gamepads.gamepadsSupported && this.gamepadConnected) {
-                if (!context.gamepads.poll()[pc.PAD_1]) {
+                var gamepadIdx = gamepadNum ? gamepadNum - 1 : pc.PAD_1;
+
+                if (!context.gamepads.poll()[gamepadIdx]) {
                     // If it was active at one point, reset things.
                     if (self.gamepadActive && self.link && self.link.mouse) {
                         self.link.mouse.move = true;
@@ -164,11 +171,15 @@ pc.script.create('client', function (context) {
                     return;
                 }
 
+                console.log('Using gamepad #%s', gamepadIdx);
+
                 // gamepad movement axes
                 var x = context.gamepads.getAxis(pc.PAD_1, pc.PAD_L_STICK_X);
                 var y = context.gamepads.getAxis(pc.PAD_1, pc.PAD_L_STICK_Y);
-                movement[0] += x;
-                movement[1] += y;
+                if ((x * x + y * y) > .25) {
+                    movement[0] += x;
+                    movement[1] += y;
+                }
 
                 // gamepad firing axes
                 var gpx = context.gamepads.getAxis(pc.PAD_1, pc.PAD_R_STICK_X);

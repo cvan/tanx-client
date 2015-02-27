@@ -104,9 +104,11 @@
 
         sock.onclose = function() {
             console.log('WS close');
-            sock = new SockJS(socketUrl);
-            setupSocket();
             debug('WS close');
+            setTimeout(function () {
+                sock = new SockJS(socketUrl);
+                setupSocket();
+            }, 1000);
         };
     }
 
@@ -129,7 +131,8 @@
     function gamepadFound() {
         console.log('gamepad.found');
         debug('gamepad.found');
-        setupPeerConnection(function (peer) {
+        setupPeerConnection(function (p) {
+            peer = p;
             debug('WebRTC connected');
             peer.on('data', function (data) {
                 console.log('peer.data', data);
@@ -332,6 +335,8 @@
        }
     };
 
+    var peer;
+
     function sendUpdate() {
         if (peer) {
             peer.send({
@@ -359,9 +364,9 @@
         launchIntoFullscreen(document.body);
     }
 
-    var peer;
-
     function setupPeerConnection(cb) {
+
+        var peer;
 
         var pc = window.RTCPeerConnection ||
                  window.mozRTCPeerConnection ||
@@ -407,11 +412,6 @@
             });
         });
 
-        on('rtc.close', function () {
-            peer.destroy();
-            peer = null;
-        });
-
         on('rtc.signal', function (data) {
             if (peer) {
                 peer.signal(data);
@@ -419,7 +419,14 @@
         });
 
         // todo: don't throw TypeErrors if no rtc.
+        on('rtc.close', function () {
+            if (peer) {
+                peer.destroy();
+                peer = null;
+            }
+        });
 
     }
+
 
 })();

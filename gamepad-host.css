@@ -50,6 +50,8 @@ body {
     pointer-events: null;
     color: #fff;
     position: absolute;
+    overflow: hidden;
     top: 0;
     left: 0;
+    max-height: 50%;
 }

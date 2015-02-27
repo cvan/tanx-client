@@ -2,7 +2,14 @@ pc.script.create('fullscreen', function (context) {
     // Creates a new Fullscreen instance
     var Fullscreen = function (entity) {
         this.entity = entity;
-        
+
+        var uri = new pc.URI(window.location.href);
+        var query = uri.getQuery();
+
+        if ('hide_fullscreen' in query) {
+            return;
+        }
+
         document.body.style.width = '100%';
         document.body.requestFullScreen = document.body.requestFullScreen || document.body.mozRequestFullScreen || document.body.webkitRequestFullScreen;
         document.exitFullscreen = document.exitFullscreen || document.mozCancelFullScreen || document.webkitCancelFullScreen || document.msExitFullscreen;

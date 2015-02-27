@@ -75,7 +75,7 @@
             debug('WS open');
 
             sendData = function (name, data) {
-                console.log('Data sent:', name, JSON.stringify(data));
+                // console.log('Data sent:', name, JSON.stringify(data));
                 sock.sendMessage(name, data);
             };
         };
@@ -86,7 +86,6 @@
         };
 
         sock.onmessage = function (e) {
-            console.log('WS message:', e.data);
             var data = JSON.parse(e.data);
             var handler;
             if (data.n === 'gamepad') {
@@ -95,6 +94,7 @@
                     handler(data.d.data);
                 }
             } else {
+                console.log('WS message:', e.data);
                 handler = listeners[data.n];
                 if (handler) {
                     handler(data.d);

@@ -45,7 +45,6 @@ pc.script.create('gamepad', function (context) {
                         color: self.color
                     });
                     peer.on('data', function (data) {
-                        console.log('Received WebRTC gamepad message');
                         if (data.type === 'gamepad') {
                             updateControls(data.data);
                         }
@@ -95,7 +94,6 @@ pc.script.create('gamepad', function (context) {
 
             this.client.socket.on('gamepad', function (data) {
                 if (player === data.player) {
-                    console.log('Received WebSocket gamepad message');
                     updateControls(data);
                 }
             }.bind(this));

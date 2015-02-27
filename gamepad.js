@@ -31,9 +31,26 @@ pc.script.create('gamepad', function (context) {
                 self.aim = data.aim;
             }
 
+
+            this.client.socket.on('connect', function () {
+                this.client.socket.send('register.gamepad', player);
+            }.bind(this));
+
             // If the gamepad is connected after game is already started.
             this.client.socket.on('gamepad.found', function (data) {
                 console.log('Gamepad found, sending color…', self.color);
+
+                self.setupPeerConnection(function (peer) {
+                    self.send('color', {
+                        color: self.color
+                    });
+                    peer.on('data', function (data) {
+                        if (data.type === 'gamepad') {
+                            updateControls(data.data);
+                        }
+                    });
+                });
+
                 self.send('color', {
                     color: self.color
                 });
@@ -77,25 +94,8 @@ pc.script.create('gamepad', function (context) {
 
             this.client.socket.on('gamepad', function (data) {
                 if (player === data.player) {
-                    console.log('Received WebSocket gamepad message');
                     updateControls(data);
                 }
-            }.bind(this));
-
-            this.client.socket.on('connect', function () {
-                this.client.socket.send('register.gamepad', player);
-
-                this.setupPeerConnection(function (peer) {
-                    self.send('color', {
-                        color: self.color
-                    });
-                    peer.on('data', function (data) {
-                        console.log('Received WebRTC gamepad message');
-                        if (data.type === 'gamepad') {
-                            updateControls(data.data);
-                        }
-                    });
-                });
             }.bind(this));
         },
 
@@ -116,14 +116,23 @@ pc.script.create('gamepad', function (context) {
             var peer;
             var socket = this.client.socket;
 
+            socket.off('rtc.peer');
+            socket.off('rtc.close');
+            socket.off('rtc.signal');
+
             socket.send('rtc.peer', {
                 player: player
             });
 
             socket.on('rtc.peer', function (data) {
+                data = data || {};
+
                 console.log('peer found');
 
-                data = data || {};
+                if (this.peer) {
+                    this.peer.destroy();
+                    this.peer = null;
+                }
 
                 peer = new SimplePeer({
                     initiator: !!data.initiator,
@@ -148,10 +157,17 @@ pc.script.create('gamepad', function (context) {
                     socket.send('rtc.close', {
                         player: player
                     });
+                    peer.destroy();
                     this.peer = peer = null;
                 });
 
             }.bind(this));
+
+            socket.on('rtc.close', function () {
+                console.log('cleanup');
+                peer.destroy();
+                peer = null;
+            });
 
             socket.on('rtc.signal', function (data) {
                 peer.signal(data);

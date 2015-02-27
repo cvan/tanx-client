@@ -62,51 +62,78 @@
 
     var sock = new SockJS(socketUrl);
 
-    sock.sendMessage = function(name, data) {
-        sock.send(JSON.stringify({
-            n: name,
-            d: data
-        }));
-    };
-
-    sock.onopen = function() {
-        console.log('WS open');
-
-        sendData = function (name, data) {
-            console.log('Data sent:', name, JSON.stringify(data));
-            sock.sendMessage(name, data);
+    function setupSocket() {
+        sock.sendMessage = function(name, data) {
+            sock.send(JSON.stringify({
+                n: name,
+                d: data
+            }));
         };
-    };
 
-    sock.onconnect = function() {
-        console.log('WS connected');
-    };
+        sock.onopen = function() {
+            console.log('WS open');
+            debug('WS open');
+
+            sendData = function (name, data) {
+                // console.log('Data sent:', name, JSON.stringify(data));
+                sock.sendMessage(name, data);
+            };
+        };
+
+        sock.onconnect = function() {
+            console.log('WS connected');
+            debug('WS connected');
+        };
+
+        sock.onmessage = function (e) {
+            var data = JSON.parse(e.data);
+            var handler;
+            if (data.n === 'gamepad') {
+                handler = listeners['gamepad.' + data.d.type];
+                if (handler) {
+                    handler(data.d.data);
+                }
+            } else {
+                console.log('WS message:', e.data);
+                handler = listeners[data.n];
+                if (handler) {
+                    handler(data.d);
+                }
+            }
+        };
+
+        sock.onclose = function() {
+            console.log('WS close');
+            debug('WS close');
+            setTimeout(function () {
+                sock = new SockJS(socketUrl);
+                setupSocket();
+            }, 1000);
+        };
+    }
+
+    setupSocket();
 
     var listeners = {};
     var on = function (type, handler) {
         listeners[type] = handler;
     };
 
-    sock.onmessage = function (e) {
-        console.log('WS message:', e.data);
-        var data = JSON.parse(e.data);
-        var handler;
-        if (data.n === 'gamepad') {
-            handler = listeners['gamepad.' + data.d.type];
-            if (handler) {
-                handler(data.d.data);
-            }
-        } else {
-            handler = listeners[data.n];
-            if (handler) {
-                handler(data.d);
-            }
-        }
-    };
-
     on('init', function (data) {
         sock.sendMessage('register.gamepad', player);
-        setupPeerConnection(function (peer) {
+    });
+
+    on('gamepad.found', gamepadFound);
+    on('gamepad.color', gamepadColor);
+    on('gamepad.hit', gamepadHit);
+    on('gamepad.dead', gamepadDead);
+
+    function gamepadFound() {
+        console.log('gamepad.found');
+        debug('gamepad.found');
+        setupPeerConnection(function (p) {
+            peer = p;
+            debug('WebRTC connected');
             peer.on('data', function (data) {
                 console.log('peer.data', data);
                 var handler = listeners[data.type];
@@ -115,11 +142,7 @@
                 }
             });
         });
-    });
-
-    on('gamepad.color', gamepadColor);
-    on('gamepad.hit', gamepadHit);
-    on('gamepad.dead', gamepadDead);
+    }
 
     function gamepadColor(data) {
         console.log('gamepad.color', data.color);
@@ -138,13 +161,22 @@
         vibrate(1000);
     }
 
-    sock.onclose = function() {
-        console.log('WS close');
+    function debug(msg) {
+        var el = document.getElementById('debug');
+        el.innerHTML = msg + '\n' + el.innerHTML;
+    }
+
+
+    window.onerror = function (x, y, z) {
+        debug(x + ',' + y + ',' + z);
     };
 
     window.addEventListener('beforeunload', function () {
         console.log('Closed connection to WS server');
         sock.close();
+        if (peer) {
+            peer.destroy();
+        }
     });
 
     function clerp(c, i) {
@@ -303,6 +335,8 @@
        }
     };
 
+    var peer;
+
     function sendUpdate() {
         if (peer) {
             peer.send({
@@ -330,9 +364,18 @@
         launchIntoFullscreen(document.body);
     }
 
-    var peer;
-
     function setupPeerConnection(cb) {
+
+        var peer;
+
+        var pc = window.RTCPeerConnection ||
+                 window.mozRTCPeerConnection ||
+                 window.webkitRTCPeerConnection;
+
+        if (!pc) {
+            debug('no pc!');
+            return;
+        }
 
         sendData('rtc.peer', {
             player: player
@@ -364,16 +407,26 @@
                 sendData('rtc.close', {
                     player: player
                 });
+                peer.destroy();
                 peer = null;
             });
         });
 
         on('rtc.signal', function (data) {
-            peer.signal(data);
+            if (peer) {
+                peer.signal(data);
+            }
         });
 
         // todo: don't throw TypeErrors if no rtc.
+        on('rtc.close', function () {
+            if (peer) {
+                peer.destroy();
+                peer = null;
+            }
+        });
 
     }
+
 
 })();

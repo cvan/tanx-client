@@ -171,6 +171,9 @@
     window.addEventListener('beforeunload', function () {
         console.log('Closed connection to WS server');
         sock.close();
+        if (peer) {
+            peer.destroy();
+        }
     });
 
     function clerp(c, i) {
@@ -399,12 +402,20 @@
                 sendData('rtc.close', {
                     player: player
                 });
+                peer.destroy();
                 peer = null;
             });
         });
 
+        on('rtc.close', function () {
+            peer.destroy();
+            peer = null;
+        });
+
         on('rtc.signal', function (data) {
-            peer.signal(data);
+            if (peer) {
+                peer.signal(data);
+            }
         });
 
         // todo: don't throw TypeErrors if no rtc.

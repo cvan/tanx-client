@@ -116,14 +116,23 @@ pc.script.create('gamepad', function (context) {
             var peer;
             var socket = this.client.socket;
 
+            socket.off('rtc.peer');
+            socket.off('rtc.close');
+            socket.off('rtc.signal');
+
             socket.send('rtc.peer', {
                 player: player
             });
 
             socket.on('rtc.peer', function (data) {
+                data = data || {};
+
                 console.log('peer found');
 
-                data = data || {};
+                if (this.peer) {
+                    this.peer.destroy();
+                    this.peer = null;
+                }
 
                 peer = new SimplePeer({
                     initiator: !!data.initiator,
@@ -148,10 +157,17 @@ pc.script.create('gamepad', function (context) {
                     socket.send('rtc.close', {
                         player: player
                     });
+                    peer.destroy();
                     this.peer = peer = null;
                 });
 
             }.bind(this));
+
+            socket.on('rtc.close', function () {
+                console.log('cleanup');
+                peer.destroy();
+                peer = null;
+            });
 
             socket.on('rtc.signal', function (data) {
                 peer.signal(data);

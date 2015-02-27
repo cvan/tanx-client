@@ -11,6 +11,7 @@ pc.script.create('client', function (context) {
 
     Client.prototype = {
         initialize: function () {
+            this.link = context.root.findByName('camera').script.link;
             this.tanks = context.root.getChildren()[0].script.tanks;
             this.bullets = context.root.getChildren()[0].script.bullets;
             this.pickables = context.root.getChildren()[0].script.pickables;
@@ -118,8 +119,23 @@ pc.script.create('client', function (context) {
 
             context.mouse.on('mousedown', this.onMouseDown, this);
             context.mouse.on('mouseup', this.onMouseUp, this);
-            
-            this.mouseState = false;
+
+            this.gamepadConnected = false;
+            this.gamepadActive = false;
+
+            window.addEventListener('gamepadconnected', function () {
+                this.gamepadConnected = true;
+            }.bind(this));
+            window.addEventListener('gamepaddisconnected', function () {
+                this.gamepadConnected = false;
+            }.bind(this));
+
+            // Chrome doesn't have the gamepad events, and we can't
+            // feature detect them in Firefox unfortunately.
+            if ('chrome' in window) {
+                // This is a lie, but it lets us begin polling.
+                this.gamepadConnected = true;
+            }
         },
 
         update: function (dt) {
@@ -134,29 +150,58 @@ pc.script.create('client', function (context) {
             
             movement[0] += context.keyboard.isPressed(pc.input.KEY_RIGHT) - context.keyboard.isPressed(pc.input.KEY_LEFT);
             movement[1] += context.keyboard.isPressed(pc.input.KEY_DOWN) - context.keyboard.isPressed(pc.input.KEY_UP);
-            
+
             // gamepad controls
-            // AUTHOR: Potch
-            
-            // gamepad movement axes
-            movement[0] += context.gamepads.getAxis(pc.PAD_1, pc.PAD_L_STICK_X);
-            movement[1] += context.gamepads.getAxis(pc.PAD_1, pc.PAD_L_STICK_Y);
-            
-            // gamepad firing axes
-            var gpx = context.gamepads.getAxis(pc.PAD_1, pc.PAD_R_STICK_X);
-            var gpy = context.gamepads.getAxis(pc.PAD_1, pc.PAD_R_STICK_Y);
-            
-            // gamepad shooting
-            if (gpx * gpx + gpy * gpy > .25) {
-                this.shoot(true);
-                this.gpShot = true;
-            } else {
-                if (this.gpShot) {
+            // AUTHORS: Potch and cvan
+            if (context.gamepads.gamepadsSupported && this.gamepadConnected) {
+                if (!context.gamepads.poll()[pc.PAD_1]) {
+                    // If it was active at one point, reset things.
+                    if (self.gamepadActive && self.link && self.link.mouse) {
+                        self.link.mouse.move = true;
+                        this.gamepadActive = false;
+                    }
+
+                    return;
+                }
+
+                // gamepad movement axes
+                var x = context.gamepads.getAxis(pc.PAD_1, pc.PAD_L_STICK_X);
+                var y = context.gamepads.getAxis(pc.PAD_1, pc.PAD_L_STICK_Y);
+                movement[0] += x;
+                movement[1] += y;
+
+                // gamepad firing axes
+                var gpx = context.gamepads.getAxis(pc.PAD_1, pc.PAD_R_STICK_X);
+                var gpy = context.gamepads.getAxis(pc.PAD_1, pc.PAD_R_STICK_Y);
+
+                if (x || y || gpx || gpy) {
+                    this.gamepadActive = true;
+
+                    if (this.link && this.link.mouse) {
+                        this.link.mouse.move = false;
+
+                        // TODO: Figure out how to hide cursor without destroying
+                        // (so we can show the cursor again if gamepad is disconnected).
+                        var target = context.root.findByName('target');
+                        if (target) {
+                            target.destroy();
+                        }
+                    }
+                }
+
+                // gamepad shooting
+                if (gpx * gpx + gpy * gpy > .25) {
+                    this.shoot(true);
+
+                    if (this.link) {
+                        this.link.angle = Math.floor(Math.atan2(gpx, gpy) / (Math.PI / 180) + 45);
+                        this.link.link.targeting(this.link.angle);
+                    }
+                } else {
                     this.shoot(false);
-                    this.gpShot = false;
                 }
             }
-            
+
             // rotate vector
             var t =       movement[0] * Math.sin(Math.PI * 0.75) - movement[1] * Math.cos(Math.PI * 0.75);
             movement[1] = movement[1] * Math.sin(Math.PI * 0.75) + movement[0] * Math.cos(Math.PI * 0.75);

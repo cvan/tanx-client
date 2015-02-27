@@ -62,48 +62,59 @@
 
     var sock = new SockJS(socketUrl);
 
-    sock.sendMessage = function(name, data) {
-        sock.send(JSON.stringify({
-            n: name,
-            d: data
-        }));
-    };
-
-    sock.onopen = function() {
-        console.log('WS open');
-        debug.innerHTML = 'WS open';
-
-        sendData = function (name, data) {
-            console.log('Data sent:', name, JSON.stringify(data));
-            sock.sendMessage(name, data);
+    function setupSocket() {
+        sock.sendMessage = function(name, data) {
+            sock.send(JSON.stringify({
+                n: name,
+                d: data
+            }));
         };
-    };
 
-    sock.onconnect = function() {
-        console.log('WS connected');
-        debug.innerHTML = 'WS connected';
-    };
+        sock.onopen = function() {
+            console.log('WS open');
+            debug('WS open');
+
+            sendData = function (name, data) {
+                console.log('Data sent:', name, JSON.stringify(data));
+                sock.sendMessage(name, data);
+            };
+        };
+
+        sock.onconnect = function() {
+            console.log('WS connected');
+            debug('WS connected');
+        };
+
+        sock.onmessage = function (e) {
+            console.log('WS message:', e.data);
+            var data = JSON.parse(e.data);
+            var handler;
+            if (data.n === 'gamepad') {
+                handler = listeners['gamepad.' + data.d.type];
+                if (handler) {
+                    handler(data.d.data);
+                }
+            } else {
+                handler = listeners[data.n];
+                if (handler) {
+                    handler(data.d);
+                }
+            }
+        };
+
+        sock.onclose = function() {
+            console.log('WS close');
+            sock = new SockJS(socketUrl);
+            setupSocket();
+            debug('WS close');
+        };
+    }
+
+    setupSocket();
 
     var listeners = {};
     var on = function (type, handler) {
         listeners[type] = handler;
-    };
-
-    sock.onmessage = function (e) {
-        console.log('WS message:', e.data);
-        var data = JSON.parse(e.data);
-        var handler;
-        if (data.n === 'gamepad') {
-            handler = listeners['gamepad.' + data.d.type];
-            if (handler) {
-                handler(data.d.data);
-            }
-        } else {
-            handler = listeners[data.n];
-            if (handler) {
-                handler(data.d);
-            }
-        }
     };
 
     on('init', function (data) {
@@ -117,9 +128,9 @@
 
     function gamepadFound() {
         console.log('gamepad.found');
-        debug.innerHTML = 'gamepad.found';
+        debug('gamepad.found');
         setupPeerConnection(function (peer) {
-            debug.innerHTML = 'WebRTC connected';
+            debug('WebRTC connected');
             peer.on('data', function (data) {
                 console.log('peer.data', data);
                 var handler = listeners[data.type];
@@ -147,14 +158,14 @@
         vibrate(1000);
     }
 
-    sock.onclose = function() {
-        console.log('WS close');
-        // sock = new SockJS(socketUrl);
-        // sock._connect();
-        debug.innerHTML = 'WS close';
-    };
+    function debug(msg) {
+        var el = document.getElementById('debug');
+        el.innerHTML = msg + '\n' + el.innerHTML;
+    }
+
+
     window.onerror = function (x, y, z) {
-        debug.innerHTML = x + ',' + y + ',' + z;
+        debug(x + ',' + y + ',' + z);
     };
 
     window.addEventListener('beforeunload', function () {
@@ -354,6 +365,7 @@
                  window.webkitRTCPeerConnection;
 
         if (!pc) {
+            debug('no pc!');
             return;
         }
 

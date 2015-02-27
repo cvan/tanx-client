@@ -46,6 +46,8 @@ body {
 
 #debug {
     background: red;
+    opacity: .6;
+    pointer-events: null;
     color: #fff;
     position: absolute;
     top: 0;

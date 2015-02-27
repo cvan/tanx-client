@@ -15,6 +15,10 @@ pc.script.create('gamepad', function (context) {
 
     Gamepad.prototype = {
         initialize: function () {
+            if (!player) {
+                return;
+            }
+
             this.client = context.root.getChildren()[0].script.client;
             this.link = context.root.findByName('camera').script.link;
             this.tanks = context.root.findByName('tanks');
@@ -175,7 +179,7 @@ pc.script.create('gamepad', function (context) {
         },
 
         update: function (dt) {
-            if (!this.client.connected || !this.active || !this.link.link) {
+            if (!player || !this.client.connected || !this.active || !this.link.link) {
                 return;
             }
 

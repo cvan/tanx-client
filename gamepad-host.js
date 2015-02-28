@@ -38,9 +38,6 @@
         }
     }
 
-    console.log('ws_url:', socketUrl);
-    console.log('player:', player);
-
     var dirUp = document.querySelector('.direction--up');
     var dirDown = document.querySelector('.direction--down');
     var dirLeft = document.querySelector('.direction--left');
@@ -71,17 +68,14 @@
         };
 
         sock.onopen = function() {
-            console.log('WS open');
             debug('WS open');
 
             sendData = function (name, data) {
-                // console.log('Data sent:', name, JSON.stringify(data));
                 sock.sendMessage(name, data);
             };
         };
 
         sock.onconnect = function() {
-            console.log('WS connected');
             debug('WS connected');
         };
 
@@ -94,7 +88,6 @@
                     handler(data.d.data);
                 }
             } else {
-                console.log('WS message:', e.data);
                 handler = listeners[data.n];
                 if (handler) {
                     handler(data.d);
@@ -103,7 +96,6 @@
         };
 
         sock.onclose = function() {
-            console.log('WS close');
             debug('WS close');
             setTimeout(function () {
                 sock = new SockJS(socketUrl);
@@ -129,13 +121,11 @@
     on('gamepad.dead', gamepadDead);
 
     function gamepadFound() {
-        console.log('gamepad.found');
         debug('gamepad.found');
         setupPeerConnection(function (p) {
             peer = p;
             debug('WebRTC connected');
             peer.on('data', function (data) {
-                console.log('peer.data', data);
                 var handler = listeners[data.type];
                 if (handler) {
                     handler(data.data);
@@ -145,19 +135,16 @@
     }
 
     function gamepadColor(data) {
-        console.log('gamepad.color', data.color);
         color = data.color;
         moveStick.redraw();
         aimStick.redraw();
     }
 
     function gamepadHit(data) {
-        console.log('gamepad.hit', data.hp);
         vibrate(10 * (50 - (data.hp * 5)));
     }
 
     function gamepadDead(data) {
-        console.log('gamepad.dead');
         vibrate(1000);
     }
 
@@ -172,7 +159,6 @@
     };
 
     window.addEventListener('beforeunload', function () {
-        console.log('Closed connection to WS server');
         sock.close();
         if (peer) {
             peer.destroy();
@@ -393,7 +379,6 @@
             });
 
             peer.on('connect', function () {
-                console.log('Peer connected!');
                 if (cb) {
                     cb(peer);
                 }

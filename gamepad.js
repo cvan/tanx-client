@@ -42,8 +42,6 @@ pc.script.create('gamepad', function (context) {
 
             // If the gamepad is connected after game is already started.
             this.client.socket.on('gamepad.found', function (data) {
-                console.log('Gamepad found, sending color…', self.color);
-
                 self.setupPeerConnection(function (peer) {
                     self.send('color', {
                         color: self.color
@@ -79,7 +77,6 @@ pc.script.create('gamepad', function (context) {
 
                         if (localTank.own) {
                             if (lastHp > tank.hp) {
-                                console.log('hp', tank.hp);
                                 self.send('hit', {
                                     hp: tank.hp
                                 });
@@ -87,7 +84,6 @@ pc.script.create('gamepad', function (context) {
                             lastHp = tank.hp;
 
                             if (!dead && localTank.dead) {
-                                console.log('dead');
                                 self.send('dead');
                             }
                             dead = localTank.dead;
@@ -116,7 +112,6 @@ pc.script.create('gamepad', function (context) {
         },
 
         setupPeerConnection: function (cb) {
-            console.log('setting up peer connection');
             var peer;
             var socket = this.client.socket;
 
@@ -130,8 +125,6 @@ pc.script.create('gamepad', function (context) {
 
             socket.on('rtc.peer', function (data) {
                 data = data || {};
-
-                console.log('peer found');
 
                 if (this.peer) {
                     this.peer.destroy();
@@ -147,13 +140,11 @@ pc.script.create('gamepad', function (context) {
                 });
 
                 peer.on('connect', function () {
-                    console.log('peer connected!');
                     this.peer = peer;
                     cb(peer);
                 });
 
                 peer.on('signal', function (data) {
-                    console.log('signal received', data);
                     socket.send('rtc.signal', data);
                 });
 
@@ -168,7 +159,6 @@ pc.script.create('gamepad', function (context) {
             }.bind(this));
 
             socket.on('rtc.close', function () {
-                console.log('cleanup');
                 peer.destroy();
                 peer = null;
             });

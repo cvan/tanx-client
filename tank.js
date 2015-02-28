@@ -92,7 +92,6 @@ pc.script.create('tank', function (context) {
                 matGlow = context.assets.find('tank-glow').resource;
             }
             
-            // console.log(asset);
             this.matBase = matBase.clone();
             this.matTracks = matTracks.clone();
             this.matGlow = matGlow.clone();

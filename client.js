@@ -39,23 +39,16 @@ pc.script.create('client', function (context) {
             var socket = this.socket = new Socket({ url: socketUrl });
             
             this.connected = false;
-            
-            socket.on('open', function() {
-                console.log('WS open');
-            });
 
             socket.on('connect', function() {
-                console.log('WS connected');
-
                 var qs_player = /[\?&]player=([\w\-]+)/i.exec(window.location.search);
                 var player = qs_player && qs_player[1];
-                console.log('player:', player);
 
                 socket.send('register.game', player);
             });
 
             socket.on('error', function(err) {
-                console.log(err);
+                console.error('WS error:', err);
             });
             
             socket.on('init', function(data) {
@@ -159,7 +152,7 @@ pc.script.create('client', function (context) {
             // gamepad controls
             // AUTHORS: Potch and cvan
             if (context.gamepads.gamepadsSupported && this.gamepadConnected) {
-                var gamepadIdx = gamepadNum ? gamepadNum - 1 : pc.PAD_1;
+                var gamepadIdx = gamepadNum - 1;
 
                 if (!context.gamepads.poll()[gamepadIdx]) {
                     // If it was active at one point, reset things.
@@ -171,19 +164,17 @@ pc.script.create('client', function (context) {
                     return;
                 }
 
-                console.log('Using gamepad #%s', gamepadIdx);
-
                 // gamepad movement axes
-                var x = context.gamepads.getAxis(pc.PAD_1, pc.PAD_L_STICK_X);
-                var y = context.gamepads.getAxis(pc.PAD_1, pc.PAD_L_STICK_Y);
+                var x = context.gamepads.getAxis(gamepadIdx, pc.PAD_L_STICK_X);
+                var y = context.gamepads.getAxis(gamepadIdx, pc.PAD_L_STICK_Y);
                 if ((x * x + y * y) > .25) {
                     movement[0] += x;
                     movement[1] += y;
                 }
 
                 // gamepad firing axes
-                var gpx = context.gamepads.getAxis(pc.PAD_1, pc.PAD_R_STICK_X);
-                var gpy = context.gamepads.getAxis(pc.PAD_1, pc.PAD_R_STICK_Y);
+                var gpx = context.gamepads.getAxis(gamepadIdx, pc.PAD_R_STICK_X);
+                var gpy = context.gamepads.getAxis(gamepadIdx, pc.PAD_R_STICK_Y);
 
                 if (x || y || gpx || gpy) {
                     this.gamepadActive = true;

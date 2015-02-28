@@ -196,6 +196,11 @@ pc.script.create('client', function (context) {
                     this.shoot(true);
 
                     if (this.link) {
+                        this.link.mPos = [
+                            gpx / 2 * (context.graphicsDevice.width / 2),
+                            gpy / 2 * (context.graphicsDevice.height / 2)
+                        ];
+
                         this.link.angle = Math.floor(Math.atan2(gpx, gpy) / (Math.PI / 180) + 45);
                         this.link.link.targeting(this.link.angle);
                     }

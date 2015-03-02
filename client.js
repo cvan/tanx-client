@@ -149,7 +149,7 @@ pc.script.create('client', function (context) {
             movement[0] += context.keyboard.isPressed(pc.input.KEY_RIGHT) - context.keyboard.isPressed(pc.input.KEY_LEFT);
             movement[1] += context.keyboard.isPressed(pc.input.KEY_DOWN) - context.keyboard.isPressed(pc.input.KEY_UP);
 
-            // gamepad controls
+            // Gamepad controls.
             // AUTHORS: Potch and cvan
             if (context.gamepads.gamepadsSupported && this.gamepadConnected) {
                 var gamepadIdx = gamepadNum - 1;
@@ -160,52 +160,50 @@ pc.script.create('client', function (context) {
                         self.link.mouse.move = true;
                         this.gamepadActive = false;
                     }
+                } else {
+                    // Gamepad movement axes.
+                    var x = context.gamepads.getAxis(gamepadIdx, pc.PAD_L_STICK_X);
+                    var y = context.gamepads.getAxis(gamepadIdx, pc.PAD_L_STICK_Y);
+                    if ((x * x + y * y) > .25) {
+                        movement[0] += x;
+                        movement[1] += y;
+                    }
 
-                    return;
-                }
+                    // Gamepad firing axes.
+                    var gpx = context.gamepads.getAxis(gamepadIdx, pc.PAD_R_STICK_X);
+                    var gpy = context.gamepads.getAxis(gamepadIdx, pc.PAD_R_STICK_Y);
 
-                // gamepad movement axes
-                var x = context.gamepads.getAxis(gamepadIdx, pc.PAD_L_STICK_X);
-                var y = context.gamepads.getAxis(gamepadIdx, pc.PAD_L_STICK_Y);
-                if ((x * x + y * y) > .25) {
-                    movement[0] += x;
-                    movement[1] += y;
-                }
+                    if (x || y || gpx || gpy) {
+                        this.gamepadActive = true;
 
-                // gamepad firing axes
-                var gpx = context.gamepads.getAxis(gamepadIdx, pc.PAD_R_STICK_X);
-                var gpy = context.gamepads.getAxis(gamepadIdx, pc.PAD_R_STICK_Y);
+                        if (this.link && this.link.mouse) {
+                            this.link.mouse.move = false;
 
-                if (x || y || gpx || gpy) {
-                    this.gamepadActive = true;
-
-                    if (this.link && this.link.mouse) {
-                        this.link.mouse.move = false;
-
-                        // TODO: Figure out how to hide cursor without destroying
-                        // (so we can show the cursor again if gamepad is disconnected).
-                        var target = context.root.findByName('target');
-                        if (target) {
-                            target.destroy();
+                            // TODO: Figure out how to hide cursor without destroying
+                            // (so we can show the cursor again if gamepad is disconnected).
+                            var target = context.root.findByName('target');
+                            if (target) {
+                                target.destroy();
+                            }
                         }
                     }
-                }
 
-                // gamepad shooting
-                if (gpx * gpx + gpy * gpy > .25) {
-                    this.shoot(true);
+                    // Gamepad shooting.
+                    if (gpx * gpx + gpy * gpy > .25) {
+                        this.shoot(true);
 
-                    if (this.link) {
-                        this.link.mPos = [
-                            gpx / 2 * (context.graphicsDevice.width / 2),
-                            gpy / 2 * (context.graphicsDevice.height / 2)
-                        ];
+                        if (this.link) {
+                            this.link.mPos = [
+                                gpx / 2 * (context.graphicsDevice.width / 2),
+                                gpy / 2 * (context.graphicsDevice.height / 2)
+                            ];
 
-                        this.link.angle = Math.floor(Math.atan2(gpx, gpy) / (Math.PI / 180) + 45);
-                        this.link.link.targeting(this.link.angle);
+                            this.link.angle = Math.floor(Math.atan2(gpx, gpy) / (Math.PI / 180) + 45);
+                            this.link.link.targeting(this.link.angle);
+                        }
+                    } else {
+                        this.shoot(false);
                     }
-                } else {
-                    this.shoot(false);
                 }
             }
 

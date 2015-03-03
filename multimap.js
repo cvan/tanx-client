@@ -24,6 +24,7 @@ pc.script.create('multimap', function (context) {
             this.bullets = context.root.findByName('bullets');
             this.tanks = context.root.findByName('tanks');
             this.pickables = context.root.findByName('pickables');
+            this.teams = context.root.getChildren()[0].script.teams;
 
             this.level = this.minimap.level;
             if (window.top !== window) {
@@ -41,7 +42,8 @@ pc.script.create('multimap', function (context) {
             var state = {
                 bullets: [],
                 tanks: [],
-                items: []
+                items: [],
+                teams: []
             };
 
             var bullets = this.bullets.getChildren();
@@ -62,13 +64,17 @@ pc.script.create('multimap', function (context) {
 
             var tanks = this.tanks.getChildren();
             tanks.forEach(function (t) {
-                if (t.script.tank.dead) {
+                if (t.script.tank.dead || !t.script.tank.flashState) {
                     return;
                 }
                 var pos = t.getPosition();
                 var clr = t.script.tank.matBase.emissive;
                 state.tanks.push([pos.x, pos.z, -Math.atan2(t.forward.x, t.forward.z), '#' + ('00' + Math.floor(clr.r * 255).toString(16)).slice(-2) + ('00' + Math.floor(clr.g * 255).toString(16)).slice(-2) + ('00' + Math.floor(clr.b * 255).toString(16)).slice(-2)]);
             });
+
+            for (var i = 0; i < 4; i++) {
+                state.teams.push([this.teams.colors[i], this.teams.scores[i]]);
+            }
 
             // this.bullets.forEach(function (bullet) {
             //     console.log(bullet);

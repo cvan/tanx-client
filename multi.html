@@ -45,6 +45,13 @@
          top: 50%;
          left: 50%;
       }
+      .logo {
+          position: absolute;
+          bottom: 4vmin;
+          left: 4vmin;
+          pointer-events: none;
+          opacity: .7;
+      }
     </style>
   </head>
   <body>
@@ -53,6 +60,7 @@
     <iframe class="p3" src="/index.html?player=3&amp;multi=1&amp;ws_url=http://localhost:30043/socket"></iframe>
     <iframe class="p4" src="/index.html?player=4&amp;multi=1&amp;ws_url=http://localhost:30043/socket"></iframe>
     <canvas class="minimap"></canvas>
+    <img class="logo" src="playcanvas.png">
     <script>
       (function () {
         if (!('origin' in window.location)) {
@@ -72,6 +80,18 @@
     </script>
     <script>
 
+        function launchIntoFullscreen(element) {
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+            } else if (element.mozRequestFullScreen) {
+                element.mozRequestFullScreen();
+            } else if (element.webkitRequestFullscreen) {
+                element.webkitRequestFullscreen();
+            } else if (element.msRequestFullscreen) {
+                element.msRequestFullscreen();
+            }
+        }
+
         var itemColors = {
             'repair': '#6f6',
             'damage': '#f60',
@@ -88,6 +108,10 @@
         ctx.font = size * 6 + 'px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+
+        canvas.addEventListener('click', function () {
+            launchIntoFullscreen(document.body);
+        });
 
         var chosen = false;
 

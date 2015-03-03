@@ -43,7 +43,8 @@ pc.script.create('bullets', function (context) {
                     bullet.on('finish', function() {
                         self.delete({ id: this.id });
                     });
-                    
+                    bullet.active = false;
+
                     this.bullets.addChild(bullet);
                     
                     // add to pool
@@ -57,7 +58,8 @@ pc.script.create('bullets', function (context) {
             // get bullet from pool
             var bullet = this.pool.pop();
             this.active.push(bullet);
-            
+            bullet.active = true;
+
             // attach ID
             bullet.id = data.id;
             
@@ -67,6 +69,8 @@ pc.script.create('bullets', function (context) {
             // clear minimap data
             bullet.lastX = undefined;
             bullet.lastZ = undefined;
+            bullet.oldX = undefined;
+            bullet.oldY = undefined;
 
             // offset
             vecTmp.set(0, 0, 1);

@@ -2,6 +2,13 @@ pc.script.create('tanks', function (context) {
     var Tanks = function (entity) {
         this.entity = entity;
         this.ind = 0;
+
+        var uri = new pc.URI(window.location.href);
+        var query = uri.getQuery();
+
+        if ('multi' in query) {
+            this.multi = true;
+        }
     };
 
     Tanks.prototype = {
@@ -14,6 +21,7 @@ pc.script.create('tanks', function (context) {
             this.client = context.root.getChildren()[0].script.client;
             this.camera = context.root.findByName('camera');
             this.minimap = context.root.getChildren()[0].script.minimap;
+            this.multimap = context.root.getChildren()[0].script.multimap;
             this.teams = context.root.getChildren()[0].script.teams;
             this.hpBar = context.root.getChildren()[0].script.hp;
             
@@ -79,8 +87,12 @@ pc.script.create('tanks', function (context) {
                 if (tank.own && tankData.hasOwnProperty('s'))
                     this.hpBar.setScore(tankData.s);
             }
-            
-            this.minimap.draw();
+
+            if (!this.multi) {
+                this.minimap.draw();
+            } else {
+                this.multimap.render();
+            }
         }
     };
 

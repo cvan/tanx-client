@@ -2,6 +2,13 @@ pc.script.create('infoBox', function (context) {
     var InfoBox = function (entity) {
         this.entity = entity;
 
+        var uri = new pc.URI(window.location.href);
+        var query = uri.getQuery();
+
+        if ('multi' in query) {
+            return;
+        }
+
         var button = this.button = document.createElement('div');
         button.id = 'infoButton';
         button.style.position = 'absolute';

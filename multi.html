@@ -6,10 +6,12 @@
     <title>TANX</title>
     <style>
       iframe {
+        box-sizing: border-box;
         border: 0;
         height: 50vh;
         position: absolute;
         width: 50vw;
+        border: 1px solid black;
       }
       .p1 {
         left: 0;
@@ -27,13 +29,30 @@
         bottom: 0;
         right: 0;
       }
+      .minimap {
+         display: block;
+         position: absolute;
+         z-index: 1;
+         background-color: #212224;
+         box-shadow: 0 0 2px #000;
+         cursor: default;
+         transition: opacity 200ms, visibility 200ms;
+         -webkit-transform: translate(-50%, -50%) rotate(45deg);
+         -moz-transform: translate(-50%, -50%) rotate(45deg);
+         -ms-transform: translate(-50%, -50%) rotate(45deg);
+         transform: translate(-50%, -50%) rotate(45deg);
+         border: 4px solid #5e7578;
+         top: 50%;
+         left: 50%;
+      }
     </style>
   </head>
   <body>
-    <iframe class="p1" src="/index.html?player=1&amp;hide_fullscreen=1&amp;ws_url=http://localhost:30043/socket"></iframe>
-    <iframe class="p2" src="/index.html?player=2&amp;hide_fullscreen=1&amp;ws_url=http://localhost:30043/socket"></iframe>
-    <iframe class="p3" src="/index.html?player=3&amp;hide_fullscreen=1&amp;ws_url=http://localhost:30043/socket"></iframe>
-    <iframe class="p4" src="/index.html?player=4&amp;hide_fullscreen=1&amp;ws_url=http://localhost:30043/socket"></iframe>
+    <iframe class="p1" src="/index.html?player=1&amp;multi=1&amp;ws_url=http://localhost:30043/socket"></iframe>
+    <iframe class="p2" src="/index.html?player=2&amp;multi=1&amp;ws_url=http://localhost:30043/socket"></iframe>
+    <iframe class="p3" src="/index.html?player=3&amp;multi=1&amp;ws_url=http://localhost:30043/socket"></iframe>
+    <iframe class="p4" src="/index.html?player=4&amp;multi=1&amp;ws_url=http://localhost:30043/socket"></iframe>
+    <canvas class="minimap"></canvas>
     <script>
       (function () {
         if (!('origin' in window.location)) {
@@ -50,6 +69,79 @@
           }
         }
       })();
+    </script>
+    <script>
+
+        var itemColors = {
+            'repair': '#6f6',
+            'damage': '#f60',
+            'shield': '#06f'
+        };
+
+        var unit = 48;
+        var canvas = document.querySelector('.minimap');
+        var ctx = canvas.getContext('2d');
+        var size = Math.min(window.innerWidth, window.innerHeight) / 140 | 0;
+        canvas.width = size * unit;
+        canvas.height = size * unit;
+
+        var chosen = false;
+
+        var level;
+        var state = {
+            bullets: [],
+            items: [],
+            tanks: []
+        };
+        window.addEventListener('message', function (e) {
+            var data = e.data;
+            var type = e.data.type;
+            if (!type) {
+                return;
+            }
+            if (type === 'level' && !chosen) {
+                level = data.data;
+                e.source.postMessage('map.chosen', '*');
+                chosen = true;
+                draw();
+            }
+            if (type === 'state') {
+                state = data.data;
+                draw();
+            }
+        });
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#5e7578';
+            level.forEach(function (rect) {
+                ctx.fillRect((rect[0] - rect[2] / 2) * size, (rect[1] - rect[3] / 2) * size, rect[2] * size, rect[3] * size);
+            });
+            state.tanks.forEach(function (t) {
+                ctx.save();
+                ctx.translate(size * t[0], size * t[1]);
+                ctx.rotate(t[2]);
+                ctx.fillStyle = t[3];
+                ctx.fillRect(-size, -2 * size, 2 * size, 4 * size);
+                ctx.restore();
+            });
+            state.items.forEach(function (i) {
+                ctx.save();
+                ctx.translate(size * i[0], size * i[1]);
+                ctx.fillStyle = itemColors[i[2]];
+                ctx.fillRect(-size/2, -size/2, size, size);
+                ctx.restore();
+            });
+            ctx.strokeStyle = 'rgba(255, 255, 255, .8)';
+            ctx.beginPath();
+            state.bullets.forEach(function (b) {
+                ctx.save();
+                ctx.moveTo(size * b[0], size * b[1]);
+                ctx.lineTo(size * b[2], size * b[3]);
+                ctx.restore();
+            });
+            ctx.stroke();
+        }
     </script>
   </body>
 </html>

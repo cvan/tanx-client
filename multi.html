@@ -34,7 +34,7 @@
          position: absolute;
          z-index: 1;
          background-color: #212224;
-         box-shadow: 0 0 2px #000;
+         box-shadow: 0 0 0 2px #000;
          cursor: default;
          transition: opacity 200ms, visibility 200ms;
          -webkit-transform: translate(-50%, -50%) rotate(45deg);
@@ -85,13 +85,18 @@
         canvas.width = size * unit;
         canvas.height = size * unit;
 
+        ctx.font = size * 6 + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
         var chosen = false;
 
         var level;
         var state = {
             bullets: [],
             items: [],
-            tanks: []
+            tanks: [],
+            teams: []
         };
         window.addEventListener('message', function (e) {
             var data = e.data;
@@ -141,6 +146,19 @@
                 ctx.restore();
             });
             ctx.stroke();
+
+            state.teams.forEach(function (t, i) {
+                ctx.save();
+                var x = (6 + 36 * (i % 2)) * size;
+                var y = (6 + 36 * (i / 2 | 0)) * size;
+                ctx.save();
+                ctx.beginPath();
+                ctx.translate(x, y);
+                ctx.rotate(-Math.PI / 4);
+                ctx.fillStyle = 'rgb(' + t[0].join(',') + ')';
+                ctx.fillText(t[1], 0, 0);
+                ctx.restore();
+            });
         }
     </script>
   </body>

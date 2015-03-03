@@ -523,8 +523,8 @@ pc.script.create('overlay', function (app) {
                 this.elOverlay.style.backgroundColor = 'rgba(0, 0, 0, ' + (isNaN(state) ? .7 : state) + ')'
                 this.elOverlay.classList.add('active');
 
-                if (--this.popupDelay === 0 && this.elPopup)
-                    this.popupDownload();
+                // if (--this.popupDelay === 0 && this.elPopup)
+                //     this.popupDownload();
             } else {
                 this.elOverlay.style.backgroundColor = '';
                 this.elOverlay.classList.remove('active');

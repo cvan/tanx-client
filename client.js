@@ -30,10 +30,10 @@ pc.script.create('client', function (context) {
             var query = uri.getQuery();
 
             var socketUrl = 'http://tanx.playcanvas.com/socket';
-            if ('ws_url' in query) {
-                socketUrl = query.ws_url;
-            } else if (window.location.hostname === 'localhost') {
-                socketUrl = 'http://localhost:30043/socket';
+            if ('wsport' in query) {
+                socketUrl = (window.location.protocol + '//' +
+                             window.location.hostname + ':' + query.wsport +
+                             '/socket');
             }
 
             var socket = this.socket = new Socket({ url: socketUrl });

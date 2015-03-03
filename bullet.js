@@ -4,6 +4,7 @@ pc.script.create('bullet', function (context) {
     var Bullet = function (entity) {
         this.entity = entity;
         this.speed = 1;
+        this.active = false;
     };
 
     Bullet.prototype = {

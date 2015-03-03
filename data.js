@@ -7515,6 +7515,11 @@ var content = {
                 "name": "minimap"
               },
               {
+                "url": "multimap.js",
+                "attributes": [],
+                "name": "multimap"
+              },
+              {
                 "url": "gamepad.js",
                 "attributes": [],
                 "name": "gamepad"

@@ -6,7 +6,7 @@ pc.script.create('fullscreen', function (context) {
         var uri = new pc.URI(window.location.href);
         var query = uri.getQuery();
 
-        if ('hide_fullscreen' in query) {
+        if ('multi' in query) {
             return;
         }
 

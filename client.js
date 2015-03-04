@@ -193,7 +193,9 @@ pc.script.create('client', function (context) {
                             ];
 
                             this.link.angle = Math.floor(Math.atan2(gpx, gpy) / (Math.PI / 180) + 45);
-                            this.link.link.targeting(this.link.angle);
+                            if (this.link.link) {
+                                this.link.link.targeting(this.link.angle);
+                            }
                         }
                     } else {
                         this.shoot(false);

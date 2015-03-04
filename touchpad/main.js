@@ -126,10 +126,9 @@
     }
 
     function debug(msg) {
-        var el = document.getElementById('debug');
-        el.innerHTML = msg + '\n' + el.innerHTML;
+        // var el = document.getElementById('debug');
+        // el.innerHTML = msg + '\n' + el.innerHTML;
     }
-
 
     window.onerror = function (x, y, z) {
         debug(x + ',' + y + ',' + z);

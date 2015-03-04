@@ -11,5 +11,5 @@
   ],
   "start_url": "/touchpad/?player=1",
   "display": "standalone",
-  "orientation": "landscape"
+  "orientation": ["landscape-primary"]
 }

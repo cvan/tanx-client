@@ -30,7 +30,7 @@ pc.script.create('fullscreen', function (context) {
         button.style.textAlign = 'right';
         
         var i = document.createElement('img');
-        i.src = 'https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/images/fs.png';
+        i.src = 'img/fs.png';
         i.style.position = 'absolute';
         i.style.color = '#2ecc71';
         i.style.top = '0px';

@@ -54,7 +54,7 @@ pc.script.create('infoBox', function (context) {
         modal.style.cursor = 'pointer';
         modal.style.textAlign = 'center';
         
-        modal.innerHTML = '<img src="https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/images/tanx_green.png" style="padding-top:8px;" />';
+        modal.innerHTML = '<img src="img/tanx_green.png" style="padding-top:8px;" />';
         modal.innerHTML += '<p>Multiplayer Top-Down Tanks Shooter<p>';
         modal.innerHTML += '<p>made during 12 hours hackathon using <a href="https://playcanvas.com/" target="_blank">PlayCanvas</a> and node.js.</p>';
         modal.innerHTML += '<p>Use WASD &amp; Mouse to control tank or Touch Joystics on mobile platforms.</p>';
@@ -68,7 +68,7 @@ pc.script.create('infoBox', function (context) {
         document.body.style.fontWeight = '100';
         
         var logo = document.createElement('img');
-        logo.src = 'https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/images/tanx.png';
+        logo.src = 'img/tanx.png';
         logo.alt = 'logo';
         logo.style.position = 'absolute';
         logo.style.bottom = '16px';

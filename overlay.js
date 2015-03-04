@@ -370,7 +370,7 @@ pc.script.create('overlay', function (app) {
         // popup
         var popup = this.elPopup = document.createElement('div');
         popup.id = 'popup';
-        popup.innerHTML = '<p class="free">Free</p><p class="upgrade">Upgrade</p><img class="image" src="https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/tanx/tanx-upgrade.png" /><p class="description">Install Mobile Version to Upgrade Your Tank</p><img id="popupInstall" src="https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/tanx/download-app-store.png" /><div id="popupClose">Close</div>';
+        popup.innerHTML = '<p class="free">Free</p><p class="upgrade">Upgrade</p><img class="image" src="img/tanx-upgrade.png" /><p class="description">Install Mobile Version to Upgrade Your Tank</p><img id="popupInstall" src="img/download-app-store.png" /><div id="popupClose">Close</div>';
         document.body.appendChild(popup);
         
         var closePopup = function() {

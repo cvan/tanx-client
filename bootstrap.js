@@ -258,7 +258,7 @@ pc.extend(pc, function () {
 
             // create close button DOM
             var close = document.createElement('img');
-            close.setAttribute('src', 'http://s3-eu-west-1.amazonaws.com/static.playcanvas.com/images/icons/fa/16x16/remove.png');
+            close.setAttribute('src', 'img/remove.png');
             close.style.cssFloat = 'right';
             close.style.padding = '5px';
             close.style.cursor = 'pointer';

@@ -487,8 +487,8 @@ pc.script.create('overlay', function (app) {
         this.timerStart = 0;
         this.timerElapse = 1;
         this.timerSecond = 0;
-        
-        this.imagesStore = 'https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/tanx/';
+
+        this.imagesStore = 'img/';
         this.popupDelay = 6;
         
         if (! /(ipad|iphone|ipod)/gi.test(navigator.userAgent)) {

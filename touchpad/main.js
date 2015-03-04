@@ -1,5 +1,21 @@
 ;(function () {
 
+    if ('mozLockOrientation' in window.screen) {
+        if (window.screen.mozLockOrientation('landscape')) {
+            console.log('Locked orientation (moz): landscape-primary');
+        } else {
+            console.log('`screen.mozLockOrientation` could not work');
+        }
+    } else if ('lockOrientation' in window.screen) {
+        if (window.screen.lockOrientation('landscape')) {
+            console.log('Locked orientation: landscape-primary');
+        } else {
+            console.log('`screen.mozLockOrientation` could not work');
+        }
+    } else {
+        console.log('No `screen.lockOrientation` found');
+    }
+
     var vibrate = function (duration) {
         if ('vibrate' in navigator) {
             navigator.vibrate(duration);

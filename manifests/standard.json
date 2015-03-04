@@ -1,0 +1,15 @@
+{
+  "short_name": "Tanx",
+  "name": "Tanx",
+  "icons": [
+    {
+      "src": "/img/killer-blue.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "density": "2.0"
+    }
+  ],
+  "start_url": "/touchpad/?player=1",
+  "display": "standalone",
+  "orientation": "landscape"
+}

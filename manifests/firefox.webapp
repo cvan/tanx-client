@@ -1,0 +1,16 @@
+{
+  "name": "Tanx",
+  "description": "multiplayer WebGL tank game",
+  "launch_path": "/touchpad/?player=1",
+  "icons": {
+    "128": "/img/killer-blue.png"
+  },
+  "developer": {
+    "name": "Mozilla",
+    "url": "https://www.mozilla.org"
+  },
+  "default_locale": "en",
+  "locales": {
+    "en": {}
+  }
+}

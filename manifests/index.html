@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>TANX</title>
+    <style>
+      html {
+        background: rgb(0,150,221);
+      }
+
+      body {
+        color: #fff;
+        font: 1.25rem/1.5 'Fira Sans', sans-serif;
+        padding: 30px;
+        text-rendering: optimizeLegibility;
+      }
+     </style>
+    <link rel="manifest" href="standard.json">
+  </head>
+  <body>
+    <h1>Install Touchpad (Player #1)</h1>
+    <script>
+      document.body.onclick = function () {
+      	var req = navigator.mozApps.install('firefox.webapp');
+
+				req.onsuccess = function () {
+				  alert('Installation successful!');
+				};
+				req.onerror = function () {
+				  alert('Install failed, error: ' + this.error.name);
+				};
+			};
+    </script>
+  </body>
+</html>

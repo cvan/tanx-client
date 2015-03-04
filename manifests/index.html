@@ -22,7 +22,7 @@
     <h1>Install Touchpad (Player #1)</h1>
     <script>
       document.body.onclick = function () {
-      	var req = navigator.mozApps.install('firefox.webapp');
+        var req = navigator.mozApps.install(window.location.origin + '/manifests/firefox.webapp');
 
 				req.onsuccess = function () {
 				  alert('Installation successful!');

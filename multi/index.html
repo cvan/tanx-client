@@ -55,30 +55,23 @@
     </style>
   </head>
   <body>
-    <iframe class="p1" src="/index.html?player=1&amp;multi=1&amp;ws_url=http://localhost:30043/socket"></iframe>
-    <iframe class="p2" src="/index.html?player=2&amp;multi=1&amp;ws_url=http://localhost:30043/socket"></iframe>
-    <iframe class="p3" src="/index.html?player=3&amp;multi=1&amp;ws_url=http://localhost:30043/socket"></iframe>
-    <iframe class="p4" src="/index.html?player=4&amp;multi=1&amp;ws_url=http://localhost:30043/socket"></iframe>
+    <iframe class="p1" src="/?player=1&amp;multi=1"></iframe>
+    <iframe class="p2" src="/?player=2&amp;multi=1"></iframe>
+    <iframe class="p3" src="/?player=3&amp;multi=1"></iframe>
+    <iframe class="p4" src="/?player=4&amp;multi=1"></iframe>
     <canvas class="minimap"></canvas>
     <img class="logo" src="playcanvas.png">
     <script>
-      (function () {
-        if (!('origin' in window.location)) {
-          window.location.origin = window.location.protocol + '//' + window.location.host;
-        }
-
-        var qsToAppend = '&ws_url=' + window.location.origin + '/socket';
+        var qs_wsport = /[\?&]wsport=([\w\-]+)/i.exec(window.location.search);
+        var socketPort = qs_wsport ? qs_wsport[1] : 80;
 
         var iframes = document.querySelectorAll('iframe');
         for (var i = 0; i < iframes.length; i++) {
-          var iframe = iframes[i];
-          if (iframe.src.indexOf('&ws_url=') === -1) {
-            iframe.setAttribute('src', iframe.src + qsToAppend);
-          }
+            var iframe = iframes[i];
+            if (iframe.src.indexOf('&wsport=') === -1) {
+                iframe.setAttribute('src', iframe.src + '&wsport=' + socketPort);
+            }
         }
-      })();
-    </script>
-    <script>
 
         function launchIntoFullscreen(element) {
             if (element.requestFullscreen) {

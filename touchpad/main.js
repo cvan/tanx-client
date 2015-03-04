@@ -6,32 +6,14 @@
         }
     };
 
-    var socketUrl = 'http://tanx.playcanvas.com/socket';
-    var player = '';
+    var qs_wsport = /[\?&]wsport=([\w\-]+)/i.exec(window.location.search);
+    var socketPort = qs_wsport ? qs_wsport[1] : 80;
 
-    // Get query-string parameters (à la `URLSearchParams`).
-    var search = window.location.search;
-    if ('URLSearchParams' in window && search) {
-        var query = new URLSearchParams(search.substr(1));
-        if (query.has('wsport')) {
-            socketUrl = (window.location.protocol + '//' +
-                         window.location.hostname + ':' + query.get('wsport') +
-                         '/socket');
-        }
+    var socketUrl = (window.location.protocol + '//' +
+                     window.location.hostname + ':' + socketPort + '/socket');
 
-        if (query.has('player')) {
-            player = query.get('player');
-        }
-    } else {
-        var qs_wsport = /[\?&]wsport=(.+)/i.exec(window.location.search);
-        if (qs_wsport) {
-            socketUrl = (window.location.protocol + '//' +
-                         window.location.host + ':' + qs_wsport[1] + '/socket');
-        }
-
-        var qs_player = /[\?&]player=([\w\-]+)/i.exec(window.location.search);
-        player = qs_player && qs_player[1];
-    }
+    var qs_player = /[\?&]player=([\w\-]+)/i.exec(window.location.search);
+    var player = qs_player && qs_player[1];
 
     var dirUp = document.querySelector('.direction--up');
     var dirDown = document.querySelector('.direction--down');

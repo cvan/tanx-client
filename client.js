@@ -28,23 +28,19 @@ pc.script.create('client', function (context) {
             // Get query-string parameters (à la `URLSearchParams`).
             var uri = new pc.URI(window.location.href);
             var query = uri.getQuery();
+            var socketPort = 'wsport' in query ? query.wsport : 80;
 
-            var socketUrl = 'http://tanx.playcanvas.com/socket';
-            if ('wsport' in query) {
-                socketUrl = (window.location.protocol + '//' +
-                             window.location.hostname + ':' + query.wsport +
-                             '/socket');
-            }
-
+            var socketUrl = (window.location.protocol + '//' +
+                             window.location.hostname + ':' + socketPort + '/socket');
             var socket = this.socket = new Socket({ url: socketUrl });
             
             this.connected = false;
 
             socket.on('connect', function() {
                 var qs_player = /[\?&]player=([\w\-]+)/i.exec(window.location.search);
-                var player = qs_player && qs_player[1];
-
-                socket.send('register.game', player);
+                if (qs_player) {
+                    socket.send('register.game', qs_player[1]);
+                }
             });
 
             socket.on('error', function(err) {

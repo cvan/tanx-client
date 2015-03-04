@@ -38,9 +38,7 @@ pc.script.create('client', function (context) {
 
             socket.on('connect', function() {
                 var qs_player = /[\?&]player=([\w\-]+)/i.exec(window.location.search);
-                if (qs_player) {
-                    socket.send('register.game', qs_player[1]);
-                }
+                socket.send('register.game', qs_player && qs_player[1]);
             });
 
             socket.on('error', function(err) {

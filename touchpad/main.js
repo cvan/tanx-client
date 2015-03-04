@@ -174,7 +174,13 @@
             draw();
         });
 
+        var fullscreenDone = false;
+
         el.addEventListener('touchstart', function(e) {
+            if (!fullscreenDone) {
+                setupScreen();
+            }
+
             finger = e.changedTouches[0].identifier;
         });
         el.addEventListener('touchmove', handle);
@@ -324,6 +330,7 @@
 
     function setupScreen() {
         launchIntoFullscreen(document.body);
+        fullscreenDone = true;
     }
 
     function setupPeerConnection(cb) {

@@ -31,6 +31,9 @@
     var qs_player = /[\?&]player=([\w\-]+)/i.exec(window.location.search);
     var player = qs_player && qs_player[1];
 
+    var qs_throttle = /[\?&]throttle=([\w\-]+)/i.exec(window.location.search);
+    var throttleNum = qs_throttle && qs_throttle[1];
+
     var dirUp = document.querySelector('.direction--up');
     var dirDown = document.querySelector('.direction--down');
     var dirLeft = document.querySelector('.direction--left');
@@ -222,7 +225,7 @@
                         dx = cx - x;
                         dy = cy - y;
                         active = true;
-                        draw();
+                        draw(true);
                         break;
                     }
                 }
@@ -261,7 +264,7 @@
 
         ctx.lineWidth = 2;
 
-        function draw() {
+        function draw(throttle) {
             var h = Math.sqrt(dy * dy + dx * dx);
             var a = Math.atan2(dy ,dx);
 
@@ -292,7 +295,7 @@
             y = l * Math.sin(a) / size;
 
             if ('onchange' in self) {
-                self.onchange(x, y);
+                self.onchange(x, y, throttle);
             }
         }
 
@@ -304,24 +307,41 @@
     var moveStick = new Stick(document.querySelector('#pad1'));
     var aimStick = new Stick(document.querySelector('#pad2'));
 
-    moveStick.onchange = function (x, y) {
+    moveStick.onchange = function (x, y, throttle) {
         if (state.move.x !== x || state.move.y !== y) {
             state.move.x = x;
             state.move.y = y;
-            sendUpdate();
+            sendUpdate(throttle);
         }
     };
-    aimStick.onchange = function (x, y) {
+    aimStick.onchange = function (x, y, throttle) {
         if (state.aim.x !== x || state.aim.y !== y) {
            state.aim.x = x;
            state.aim.y = y;
-           sendUpdate();
+           sendUpdate(throttle);
        }
     };
 
     var peer;
+    var lastSentUpdate = 0;
+    var THROTTLE_RATE = parseInt(throttleNum, 10) || 20;
+    var timeout;
+    var n = 0;
 
-    function sendUpdate() {
+    function throttledSendUpdate() {
+        if (Date.now() - lastSentUpdate > THROTTLE_RATE) {
+            debug(n++);
+            sendUpdate();
+            lastSentUpdate = Date.now();
+        }
+    }
+
+    function sendUpdate(throttle) {
+        if (throttle) {
+            throttledSendUpdate();
+            return;
+        }
+
         if (peer) {
             peer.send({
                 type: 'gamepad',

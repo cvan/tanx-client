@@ -9,6 +9,7 @@ pc.script.create('gamepad', function (context) {
         this.entity = entity;
         this.move = {x: 0, y: 0};
         this.aim = {x: 0, y: 0};
+        this.lastMove = [0, 0];
         this.active = false;
         this.peer = null;
     };
@@ -180,7 +181,10 @@ pc.script.create('gamepad', function (context) {
             var length = Math.sqrt(this.move.x * this.move.x + this.move.y * this.move.y);
             var x = length * Math.sin(angle);
             var y = length * Math.cos(angle);
-            this.client.socket.send('move', [x, y]);
+            if (x !== this.lastMove[0] || y !== this.lastMove[1]) {
+                this.client.socket.send('move', [x, y]);
+                this.lastMove = [x, y];
+            }
 
             // Aiming.
             this.link.mPos = [
